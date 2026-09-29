@@ -1,0 +1,98 @@
+<form class="party-corner-portraits-form" autocomplete="off" style="--pcp-border-color: {{config.borderColor}};">
+  <section class="pcp-general">
+    <div class="form-group">
+      <label>Esquina</label>
+      <select name="position">
+        {{#each positions}}
+          <option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>
+        {{/each}}
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label>Disposición</label>
+      <select name="orientation">
+        {{#each orientations}}
+          <option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>
+        {{/each}}
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label>Tamaño del retrato</label>
+      <input type="number" name="size" value="{{config.size}}" min="48" max="160" step="1">
+      <p class="notes">48–160 píxeles.</p>
+    </div>
+
+    <div class="form-group">
+      <label>Mostrar nombres</label>
+      <input type="checkbox" name="showNames" {{#if config.showNames}}checked{{/if}}>
+    </div>
+
+    <div class="form-group">
+      <label>Color del borde</label>
+      <input type="color" name="borderColor" value="{{config.borderColor}}">
+      <p class="notes">Color aplicado al borde de todos los retratos.</p>
+    </div>
+
+    <div class="form-group">
+      <label>Offset horizontal</label>
+      <input type="number" name="offsetX" value="{{config.offsetX}}" min="0" max="1000" step="1">
+      <p class="notes">Distancia en píxeles desde el borde horizontal de la esquina elegida.</p>
+    </div>
+
+    <div class="form-group">
+      <label>Offset vertical</label>
+      <input type="number" name="offsetY" value="{{config.offsetY}}" min="0" max="1000" step="1">
+      <p class="notes">Distancia en píxeles desde el borde vertical de la esquina elegida.</p>
+    </div>
+
+    <p class="pcp-help">
+      Marca todos los actores que quieras enseñar. No depende del usuario asignado: un jugador puede tener dos o más personajes y puedes mostrar ambos.<br>
+      Los offsets se aplican respecto a la esquina elegida: arriba-izquierda = izquierda/superior; arriba-derecha = derecha/superior; abajo-izquierda = izquierda/inferior; abajo-derecha = derecha/inferior.
+    </p>
+  </section>
+
+  <hr>
+  <h2>Personajes visibles</h2>
+
+  <section class="pcp-actor-list">
+    {{#each actors}}
+      <div class="pcp-actor-row {{#unless enabled}}pcp-disabled{{/unless}}" data-actor-id="{{id}}">
+        <div class="pcp-enable-wrap">
+          <input class="pcp-enable" type="checkbox" name="actors.{{id}}.enabled" {{#if enabled}}checked{{/if}} title="Mostrar este personaje">
+        </div>
+
+        <div class="pcp-config-preview">
+          <img src="{{img}}" alt="{{name}}" style="object-position: {{x}}% {{y}}%; transform-origin: {{x}}% {{y}}%; transform: scale({{zoom}});">
+        </div>
+
+        <div class="pcp-actor-name">{{name}}</div>
+
+        <div class="pcp-framing">
+          <label class="pcp-slider">
+            <span>Horizontal</span>
+            <input type="range" name="actors.{{id}}.x" value="{{x}}" min="0" max="100" step="1">
+            <output>{{x}}%</output>
+          </label>
+
+          <label class="pcp-slider">
+            <span>Vertical</span>
+            <input type="range" name="actors.{{id}}.y" value="{{y}}" min="0" max="100" step="1">
+            <output>{{y}}%</output>
+          </label>
+
+          <label class="pcp-slider">
+            <span>Zoom</span>
+            <input type="range" name="actors.{{id}}.zoom" value="{{zoom}}" min="1" max="3" step="0.05">
+            <output>{{zoom}}×</output>
+          </label>
+        </div>
+      </div>
+    {{/each}}
+  </section>
+
+  <footer>
+    <button type="submit"><i class="fas fa-save"></i> Guardar</button>
+  </footer>
+</form>

@@ -1,0 +1,194 @@
+#pcp-party-hud {
+  --pcp-size: 86px;
+  --pcp-offset-x: 16px;
+  --pcp-offset-y: 16px;
+  --pcp-border-color: #dccdaf;
+  position: fixed;
+  z-index: 70;
+  display: flex;
+  gap: 8px;
+  pointer-events: none;
+  max-width: calc(100vw - 32px);
+  max-height: calc(100vh - 32px);
+}
+
+#pcp-party-hud.pcp-horizontal {
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
+#pcp-party-hud.pcp-vertical {
+  flex-direction: column;
+  flex-wrap: wrap;
+}
+
+#pcp-party-hud.pcp-top-left {
+  top: var(--pcp-offset-y);
+  left: var(--pcp-offset-x);
+}
+
+#pcp-party-hud.pcp-top-right {
+  top: var(--pcp-offset-y);
+  right: var(--pcp-offset-x);
+}
+
+#pcp-party-hud.pcp-bottom-left {
+  bottom: var(--pcp-offset-y);
+  left: var(--pcp-offset-x);
+}
+
+#pcp-party-hud.pcp-bottom-right {
+  bottom: var(--pcp-offset-y);
+  right: var(--pcp-offset-x);
+}
+
+#pcp-party-hud .pcp-card {
+  position: relative;
+  width: var(--pcp-size);
+  height: var(--pcp-size);
+  flex: 0 0 var(--pcp-size);
+  border: 2px solid var(--pcp-border-color);
+  border-radius: 9px;
+  overflow: hidden;
+  background: rgba(10, 10, 12, 0.92);
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.7);
+  pointer-events: auto;
+  cursor: default;
+}
+
+#pcp-party-hud .pcp-portrait {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: #111;
+}
+
+#pcp-party-hud .pcp-portrait img,
+.pcp-config-preview img {
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  border: 0;
+  object-fit: cover;
+  display: block;
+  transition: transform 100ms ease;
+}
+
+#pcp-party-hud .pcp-name {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 4px 4px 3px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  text-align: center;
+  font-size: max(10px, calc(var(--pcp-size) * 0.14));
+  line-height: 1.1;
+  font-weight: 600;
+  color: #fff;
+  text-shadow: 0 1px 2px #000, 0 0 4px #000;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.92));
+}
+
+/* Configuración */
+.party-corner-portraits-form {
+  padding: 10px;
+}
+
+.party-corner-portraits-form .pcp-general {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 16px;
+  margin-bottom: 14px;
+}
+
+.party-corner-portraits-form .form-group {
+  margin: 0;
+}
+
+.party-corner-portraits-form .pcp-help {
+  grid-column: 1 / -1;
+  margin: 4px 0 0;
+  opacity: 0.8;
+}
+
+.party-corner-portraits-form .pcp-actor-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 480px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.party-corner-portraits-form .pcp-actor-row {
+  display: grid;
+  grid-template-columns: 34px 72px minmax(150px, 1fr) minmax(260px, 2fr);
+  gap: 10px;
+  align-items: center;
+  padding: 8px;
+  border: 1px solid rgba(128, 128, 128, 0.35);
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.party-corner-portraits-form .pcp-actor-row.pcp-disabled {
+  opacity: 0.48;
+}
+
+.party-corner-portraits-form .pcp-enable-wrap {
+  display: flex;
+  justify-content: center;
+}
+
+.party-corner-portraits-form .pcp-config-preview {
+  position: relative;
+  width: 64px;
+  height: 64px;
+  overflow: hidden;
+  border: 2px solid var(--pcp-border-color, #dccdaf);
+  border-radius: 5px;
+  background: #111;
+}
+
+.party-corner-portraits-form .pcp-actor-name {
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.party-corner-portraits-form .pcp-framing {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 4px;
+}
+
+.party-corner-portraits-form .pcp-slider {
+  display: grid;
+  grid-template-columns: 58px 1fr 48px;
+  gap: 6px;
+  align-items: center;
+  font-size: 12px;
+}
+
+.party-corner-portraits-form .pcp-slider input[type="range"] {
+  width: 100%;
+}
+
+.party-corner-portraits-form .pcp-slider output {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.party-corner-portraits-form footer {
+  margin-top: 12px;
+}
+
+/* Foundry VTT 13 / ApplicationV2 */
+#party-corner-portraits-config .window-content.party-corner-portraits-form {
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
