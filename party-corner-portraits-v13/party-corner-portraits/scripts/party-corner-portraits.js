@@ -13,6 +13,8 @@ const DEFAULT_CONFIG = {
   actors: {}
 };
 
+const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
+
 function getConfig() {
   const stored = game.settings.get(MODULE_ID, SETTING_KEY) || {};
   return foundry.utils.mergeObject(foundry.utils.deepClone(DEFAULT_CONFIG), stored, {
@@ -100,22 +102,74 @@ function renderHud() {
   document.body.appendChild(hud);
 }
 
-class PartyCornerPortraitsConfig extends FormApplication {
-  static get defaultOptions() {
-    return foundry.utils.mergeObject(super.defaultOptions, {
-      id: "party-corner-portraits-config",
-      title: "Party Corner Portraits — Configuración",
-      template: `modules/${MODULE_ID}/templates/config.html`,
-      width: 760,
-      height: 720,
-      resizable: true,
-      closeOnSubmit: true,
-      submitOnChange: false,
-      submitOnClose: false
-    });
+async function submitConfiguration(_event, _form, formData) {
+  const expanded = foundry.utils.expandObject(formData.object);
+  const oldConfig = getConfig();
+  const order = [];
+  const actors = {};
+
+  for (const actor of game.actors.contents) {
+    const row = expanded.actors?.[actor.id] ?? {};
+    if (!row.enabled) continue;
+
+    order.push(actor.id);
+    actors[actor.id] = {
+      x: clamp(row.x, 0, 100, oldConfig.actors?.[actor.id]?.x ?? 50),
+      y: clamp(row.y, 0, 100, oldConfig.actors?.[actor.id]?.y ?? 50),
+      zoom: clamp(row.zoom, 1, 3, oldConfig.actors?.[actor.id]?.zoom ?? 1)
+    };
   }
 
-  async getData() {
+  // Keep the previous order for Actors that remain selected.
+  const previousOrder = (oldConfig.order || []).filter(id => order.includes(id));
+  const newlySelected = order.filter(id => !previousOrder.includes(id));
+
+  const config = {
+    position: expanded.position || DEFAULT_CONFIG.position,
+    orientation: expanded.orientation || DEFAULT_CONFIG.orientation,
+    size: clamp(expanded.size, 48, 160, DEFAULT_CONFIG.size),
+    offsetX: clamp(expanded.offsetX, 0, 1000, DEFAULT_CONFIG.offsetX),
+    offsetY: clamp(expanded.offsetY, 0, 1000, DEFAULT_CONFIG.offsetY),
+    showNames: Boolean(expanded.showNames),
+    borderColor: normalizeColor(expanded.borderColor),
+    order: [...previousOrder, ...newlySelected],
+    actors
+  };
+
+  await game.settings.set(MODULE_ID, SETTING_KEY, config);
+  renderHud();
+  ui.notifications.info("Party Corner Portraits: configuration saved.");
+}
+
+class PartyCornerPortraitsConfig extends HandlebarsApplicationMixin(ApplicationV2) {
+  static DEFAULT_OPTIONS = {
+    id: "party-corner-portraits-config",
+    tag: "form",
+    position: {
+      width: 760,
+      height: 720
+    },
+    window: {
+      title: "Party Corner Portraits — Configuration",
+      icon: "fa-solid fa-users",
+      resizable: true,
+      contentClasses: ["party-corner-portraits-form"]
+    },
+    form: {
+      closeOnSubmit: true,
+      submitOnChange: false,
+      handler: submitConfiguration
+    }
+  };
+
+  static PARTS = {
+    form: {
+      template: `modules/${MODULE_ID}/templates/config.html`
+    }
+  };
+
+  async _prepareContext(options) {
+    const context = await super._prepareContext(options);
     const config = getConfig();
     const orderIndex = new Map((config.order || []).map((id, index) => [id, index]));
 
@@ -140,13 +194,14 @@ class PartyCornerPortraitsConfig extends FormApplication {
       });
 
     return {
+      ...context,
       config,
       actors,
       positions: [
-        { value: "top-left", label: "Arriba izquierda", selected: config.position === "top-left" },
-        { value: "top-right", label: "Arriba derecha", selected: config.position === "top-right" },
-        { value: "bottom-left", label: "Abajo izquierda", selected: config.position === "bottom-left" },
-        { value: "bottom-right", label: "Abajo derecha", selected: config.position === "bottom-right" }
+        { value: "top-left", label: "Top left", selected: config.position === "top-left" },
+        { value: "top-right", label: "Top right", selected: config.position === "top-right" },
+        { value: "bottom-left", label: "Bottom left", selected: config.position === "bottom-left" },
+        { value: "bottom-right", label: "Bottom right", selected: config.position === "bottom-right" }
       ],
       orientations: [
         { value: "horizontal", label: "Horizontal", selected: config.orientation === "horizontal" },
@@ -155,80 +210,55 @@ class PartyCornerPortraitsConfig extends FormApplication {
     };
   }
 
-  activateListeners(html) {
-    super.activateListeners(html);
+  async _onRender(context, options) {
+    await super._onRender(context, options);
 
-    html.find(".pcp-framing input[type='range']").on("input", event => {
-      const input = event.currentTarget;
-      const row = input.closest(".pcp-actor-row");
-      if (!row) return;
+    for (const input of this.element.querySelectorAll(".pcp-framing input[type='range']")) {
+      input.addEventListener("input", event => {
+        const currentInput = event.currentTarget;
+        const row = currentInput.closest(".pcp-actor-row");
+        if (!row) return;
 
-      const actorId = row.dataset.actorId;
-      const preview = row.querySelector(".pcp-config-preview img");
-      if (!preview) return;
+        const actorId = row.dataset.actorId;
+        const preview = row.querySelector(".pcp-config-preview img");
+        if (!preview) return;
 
-      const x = row.querySelector(`input[name="actors.${actorId}.x"]`)?.value ?? 50;
-      const y = row.querySelector(`input[name="actors.${actorId}.y"]`)?.value ?? 50;
-      const zoom = row.querySelector(`input[name="actors.${actorId}.zoom"]`)?.value ?? 1;
+        const x = row.querySelector(`input[name="actors.${actorId}.x"]`)?.value ?? 50;
+        const y = row.querySelector(`input[name="actors.${actorId}.y"]`)?.value ?? 50;
+        const zoom = row.querySelector(`input[name="actors.${actorId}.zoom"]`)?.value ?? 1;
 
-      preview.style.objectPosition = `${x}% ${y}%`;
-      preview.style.transformOrigin = `${x}% ${y}%`;
-      preview.style.transform = `scale(${zoom})`;
+        preview.style.objectPosition = `${x}% ${y}%`;
+        preview.style.transformOrigin = `${x}% ${y}%`;
+        preview.style.transform = `scale(${zoom})`;
 
-      const output = input.parentElement?.querySelector("output");
-      if (output) {
-        output.value = input.name.endsWith(".zoom") ? `${Number(input.value).toFixed(2)}×` : `${input.value}%`;
-      }
-    });
-
-    html.find('input[name="borderColor"]').on("input", event => {
-      const color = normalizeColor(event.currentTarget.value);
-      html[0]?.style.setProperty("--pcp-border-color", color);
-    });
-
-    html.find(".pcp-enable").on("change", event => {
-      const row = event.currentTarget.closest(".pcp-actor-row");
-      row?.classList.toggle("pcp-disabled", !event.currentTarget.checked);
-    });
-  }
-
-  async _updateObject(_event, formData) {
-    const expanded = foundry.utils.expandObject(formData);
-    const oldConfig = getConfig();
-    const order = [];
-    const actors = {};
-
-    for (const actor of game.actors.contents) {
-      const row = expanded.actors?.[actor.id] ?? {};
-      if (!row.enabled) continue;
-
-      order.push(actor.id);
-      actors[actor.id] = {
-        x: clamp(row.x, 0, 100, oldConfig.actors?.[actor.id]?.x ?? 50),
-        y: clamp(row.y, 0, 100, oldConfig.actors?.[actor.id]?.y ?? 50),
-        zoom: clamp(row.zoom, 1, 3, oldConfig.actors?.[actor.id]?.zoom ?? 1)
-      };
+        const output = currentInput.parentElement?.querySelector("output");
+        if (output) {
+          output.value = currentInput.name.endsWith(".zoom")
+            ? `${Number(currentInput.value).toFixed(2)}×`
+            : `${currentInput.value}%`;
+        }
+      });
     }
 
-    // Mantener primero el orden previo de los actores que siguen seleccionados.
-    const previousOrder = (oldConfig.order || []).filter(id => order.includes(id));
-    const newlySelected = order.filter(id => !previousOrder.includes(id));
+    const borderColorInput = this.element.querySelector('input[name="borderColor"]');
+    if (borderColorInput) {
+      const applyBorderPreview = value => {
+        this.element.style.setProperty("--pcp-border-color", normalizeColor(value));
+      };
 
-    const config = {
-      position: expanded.position || DEFAULT_CONFIG.position,
-      orientation: expanded.orientation || DEFAULT_CONFIG.orientation,
-      size: clamp(expanded.size, 48, 160, DEFAULT_CONFIG.size),
-      offsetX: clamp(expanded.offsetX, 0, 1000, DEFAULT_CONFIG.offsetX),
-      offsetY: clamp(expanded.offsetY, 0, 1000, DEFAULT_CONFIG.offsetY),
-      showNames: Boolean(expanded.showNames),
-      borderColor: normalizeColor(expanded.borderColor),
-      order: [...previousOrder, ...newlySelected],
-      actors
-    };
+      applyBorderPreview(borderColorInput.value);
+      borderColorInput.addEventListener("input", event => {
+        applyBorderPreview(event.currentTarget.value);
+      });
+    }
 
-    await game.settings.set(MODULE_ID, SETTING_KEY, config);
-    renderHud();
-    ui.notifications.info("Party Corner Portraits: configuración guardada.");
+    for (const checkbox of this.element.querySelectorAll(".pcp-enable")) {
+      checkbox.addEventListener("change", event => {
+        const currentCheckbox = event.currentTarget;
+        const row = currentCheckbox.closest(".pcp-actor-row");
+        row?.classList.toggle("pcp-disabled", !currentCheckbox.checked);
+      });
+    }
   }
 }
 
@@ -243,10 +273,10 @@ Hooks.once("init", () => {
   });
 
   game.settings.registerMenu(MODULE_ID, "configuration", {
-    name: "Configurar retratos del grupo",
-    label: "Configurar retratos",
-    hint: "Elige los personajes que verán todos los jugadores y ajusta el encuadre de cada retrato.",
-    icon: "fas fa-users",
+    name: "Configure party portraits",
+    label: "Configure Portraits",
+    hint: "Choose the characters every player will see and adjust each portrait's framing.",
+    icon: "fa-solid fa-users",
     type: PartyCornerPortraitsConfig,
     restricted: true
   });

@@ -1,7 +1,7 @@
 {
   "id": "party-corner-portraits",
   "title": "Party Corner Portraits",
-  "description": "Muestra los retratos y nombres de los personajes elegidos por el GM en una esquina para todos los jugadores. Incluye encuadre, zoom individual, color de borde configurable y offsets horizontal/vertical respecto a la esquina seleccionada.",
+  "description": "Displays portraits and names for GM-selected characters in a screen corner for every player. Includes individual framing and zoom, configurable border color, and horizontal and vertical offsets from the selected corner.",
   "version": "2.1.0",
   "authors": [
     {

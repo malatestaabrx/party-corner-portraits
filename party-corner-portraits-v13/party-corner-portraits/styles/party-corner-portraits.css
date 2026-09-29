@@ -92,7 +92,7 @@
   background: linear-gradient(transparent, rgba(0, 0, 0, 0.92));
 }
 
-/* Configuración */
+/* Configuration */
 .party-corner-portraits-form {
   padding: 10px;
 }
@@ -184,4 +184,11 @@
 
 .party-corner-portraits-form footer {
   margin-top: 12px;
+}
+
+/* Foundry VTT 13 / ApplicationV2 */
+#party-corner-portraits-config .window-content.party-corner-portraits-form {
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }

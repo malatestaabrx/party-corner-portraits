@@ -1,31 +1,30 @@
 # Party Corner Portraits
 
-Módulo para Foundry Virtual Tabletop que muestra los retratos y nombres de los personajes elegidos por el GM en una esquina de la interfaz para todos los jugadores.
+Foundry Virtual Tabletop module that displays portraits and names for GM-selected characters in a corner of the interface for every player.
 
-Incluye posición y orientación configurables, tamaño y offsets, encuadre y zoom individual, nombres opcionales y color de borde personalizable.
+It includes configurable position and orientation, portrait size and offsets, individual framing and zoom, optional names, and a customizable border color.
 
-## Compatibilidad
+## Compatibility
 
-| Versión del módulo | Foundry VTT |
+| Module version | Foundry VTT |
 | --- | --- |
 | 1.2.0 | 11 |
 | 2.1.0 | 13 |
 
-## Instalación
+## Installation
 
-En Foundry VTT, abre **Add-on Modules → Install Module** y usa el manifiesto correspondiente:
+In Foundry VTT, open **Add-on Modules → Install Module** and use the appropriate manifest URL:
 
 - Foundry VTT 11: `https://raw.githubusercontent.com/malatestaabrx/party-corner-portraits/main/manifests/module-v11.json`
 - Foundry VTT 13: `https://raw.githubusercontent.com/malatestaabrx/party-corner-portraits/main/manifests/module-v13.json`
 
-Después activa **Party Corner Portraits** en el mundo y abre **Game Settings → Configure Settings → Module Settings → Configurar retratos**.
+Then enable **Party Corner Portraits** in your world and open **Game Settings → Configure Settings → Module Settings → Configure Portraits**.
 
-## Código fuente
+## Source code
 
-- `party-corner-portraits-v11-border-color/party-corner-portraits`: versión para Foundry VTT 11.
-- `party-corner-portraits-v13-border-color/party-corner-portraits`: versión para Foundry VTT 13.
+- `party-corner-portraits-v11/party-corner-portraits`: Foundry VTT 11 version.
+- `party-corner-portraits-v13/party-corner-portraits`: Foundry VTT 13 version.
 
-## Informes y sugerencias
+## Bug reports and suggestions
 
-Usa el [gestor de incidencias](https://github.com/malatestaabrx/party-corner-portraits/issues).
-
+Use the [issue tracker](https://github.com/malatestaabrx/party-corner-portraits/issues).
