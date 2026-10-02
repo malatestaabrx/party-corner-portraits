@@ -2,6 +2,8 @@
 
 Party Corner Portraits is a Foundry VTT module that displays your party’s character portraits in a corner of the interface. It lets you customize their size, position, framing, orientation, names, and border color, while also allowing quick access to each character sheet by clicking their portrait.
 
+![Party Corner Portraits module preview](preview.png)
+
 ## Compatibility
 
 | Module version | Foundry VTT |
