@@ -26,3 +26,9 @@ Then enable **Party Corner Portraits** in your world and open **Game Settings â†
 ## Bug reports and suggestions
 
 Use the [issue tracker](https://github.com/malatestaabrx/party-corner-portraits/issues).
+
+## Publishing releases to Foundry VTT
+
+The repository includes a manual GitHub Actions workflow named **Publish release to Foundry VTT**. Add the package release token from the Foundry package management page as a repository Actions secret named `FOUNDRY_RELEASE_TOKEN`.
+
+Run the workflow with **Validate without publishing** enabled first. If validation succeeds, run it again with that option disabled. Select Foundry 11 to register module version 1.2.0 or Foundry 13 to register module version 2.1.0. Wait at least 60 seconds between requests.

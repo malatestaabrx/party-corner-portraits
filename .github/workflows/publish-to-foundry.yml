@@ -1,0 +1,87 @@
+name: Publish release to Foundry VTT
+
+on:
+  workflow_dispatch:
+    inputs:
+      foundry_version:
+        description: Foundry VTT major version
+        required: true
+        type: choice
+        options:
+          - "13"
+          - "11"
+      dry_run:
+        description: Validate without publishing
+        required: true
+        type: boolean
+        default: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Read release metadata
+        id: release
+        env:
+          FOUNDRY_VERSION: ${{ inputs.foundry_version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          manifest_url="https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/${GITHUB_REF_NAME}/manifests/module-v${FOUNDRY_VERSION}.json"
+          manifest="$(curl --fail --silent --show-error --location "$manifest_url")"
+          version="$(jq --exit-status --raw-output '.version' <<<"$manifest")"
+          minimum="$(jq --exit-status --raw-output '.compatibility.minimum' <<<"$manifest")"
+          verified="$(jq --exit-status --raw-output '.compatibility.verified' <<<"$manifest")"
+          maximum="$(jq --raw-output '.compatibility.maximum // ""' <<<"$manifest")"
+          release_manifest="https://github.com/${GITHUB_REPOSITORY}/releases/download/v${version}/module-v${FOUNDRY_VERSION}.json"
+          release_notes="https://github.com/${GITHUB_REPOSITORY}/releases/tag/v${version}"
+          jq --null-input \
+            --arg version "$version" \
+            --arg manifest "$release_manifest" \
+            --arg notes "$release_notes" \
+            --arg minimum "$minimum" \
+            --arg verified "$verified" \
+            --arg maximum "$maximum" \
+            --argjson dry_run '${{ inputs.dry_run }}' \
+            '{
+              id: "party-corner-portraits",
+              "dry-run": $dry_run,
+              release: {
+                version: $version,
+                manifest: $manifest,
+                notes: $notes,
+                compatibility: {
+                  minimum: $minimum,
+                  verified: $verified,
+                  maximum: $maximum
+                }
+              }
+            }' > request.json
+
+      - name: Register release with Foundry VTT
+        env:
+          FOUNDRY_RELEASE_TOKEN: ${{ secrets.FOUNDRY_RELEASE_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -z "${FOUNDRY_RELEASE_TOKEN:-}" ]]; then
+            echo "Repository secret FOUNDRY_RELEASE_TOKEN is not configured."
+            exit 1
+          fi
+          status="$(curl --silent --show-error \
+            --output response.json \
+            --write-out '%{http_code}' \
+            --request POST \
+            --header 'Content-Type: application/json' \
+            --header "Authorization: ${FOUNDRY_RELEASE_TOKEN}" \
+            --data-binary @request.json \
+            'https://foundryvtt.com/_api/packages/release_version/')"
+          cat response.json
+          if [[ "$status" -lt 200 || "$status" -ge 300 ]]; then
+            echo "Foundry API returned HTTP ${status}."
+            exit 1
+          fi
+
