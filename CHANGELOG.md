@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.1.1 — Foundry VTT 13
+
+- Fixed the ApplicationV2 configuration window by rendering its template with a single root HTML element.
+
 ## 2.1.0 — Foundry VTT 13
 
 - Added a border color picker with immediate preview.
