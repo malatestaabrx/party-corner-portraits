@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.1.2 — Foundry VTT 13
+
+- Aligned the general configuration fields into consistent two-column rows.
+- Expanded the visible-character list to use the remaining window height.
+- Fixed vertical scrolling in the visible-character list.
+
 ## 2.1.1 — Foundry VTT 13
 
 - Fixed the ApplicationV2 configuration window by rendering its template with a single root HTML element.

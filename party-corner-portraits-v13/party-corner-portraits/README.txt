@@ -32,6 +32,15 @@ Compatibility
 Designed for Foundry VTT 13.
 The configuration window uses ApplicationV2 and HandlebarsApplicationMixin.
 
+Version 2.1.2
+-------------
+- Aligned the general configuration fields into consistent two-column rows.
+- Expanded the visible-character list and fixed its vertical scrolling.
+
+Version 2.1.1
+-------------
+- Fixed the ApplicationV2 configuration template to render a single root HTML element.
+
 Version 2.1.0
 -------------
 - Added a border color picker to the configuration window.

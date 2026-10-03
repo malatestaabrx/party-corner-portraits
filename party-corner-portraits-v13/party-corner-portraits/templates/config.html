@@ -30,12 +30,6 @@
   </div>
 
   <div class="form-group">
-    <label>Border color</label>
-    <input type="color" name="borderColor" value="{{config.borderColor}}">
-    <p class="notes">Color applied to every portrait border.</p>
-  </div>
-
-  <div class="form-group">
     <label>Horizontal offset</label>
     <input type="number" name="offsetX" value="{{config.offsetX}}" min="0" max="1000" step="1">
     <p class="notes">Distance in pixels from the horizontal edge of the selected corner.</p>
@@ -45,6 +39,12 @@
     <label>Vertical offset</label>
     <input type="number" name="offsetY" value="{{config.offsetY}}" min="0" max="1000" step="1">
     <p class="notes">Distance in pixels from the vertical edge of the selected corner.</p>
+  </div>
+
+  <div class="form-group pcp-border-color-field">
+    <label>Border color</label>
+    <input type="color" name="borderColor" value="{{config.borderColor}}">
+    <p class="notes">Color applied to every portrait border.</p>
   </div>
 
   <p class="pcp-help">
