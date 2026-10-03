@@ -147,7 +147,7 @@ class PartyCornerPortraitsConfig extends HandlebarsApplicationMixin(ApplicationV
     tag: "form",
     position: {
       width: 800,
-      height: 860
+      height: Math.max(400, Math.min(860, window.innerHeight - 80))
     },
     window: {
       title: "Party Corner Portraits — Configuration",

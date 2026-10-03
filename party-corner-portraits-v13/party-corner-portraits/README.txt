@@ -32,6 +32,11 @@ Compatibility
 Designed for Foundry VTT 13.
 The configuration window uses ApplicationV2 and HandlebarsApplicationMixin.
 
+Version 2.1.4
+- Fixed scrolling for the complete configuration form.
+- The window now fits the available screen height.
+- The Save button remains visible while scrolling.
+
 Version 2.1.3
 - Increased the configuration window height.
 - Added live character search.

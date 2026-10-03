@@ -9,7 +9,7 @@ Party Corner Portraits is a Foundry VTT module that displays your party’s char
 | Module version | Foundry VTT |
 | --- | --- |
 | 1.2.0 | 11 |
-| 2.1.3 | 13 |
+| 2.1.4 | 13 |
 
 ## Installation
 

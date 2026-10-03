@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.1.4 — Foundry VTT 13
+
+- Constrained the configuration window to the available viewport height.
+- Restored scrolling for the complete configuration form.
+- Kept the Save button visible at the bottom of the window.
+
 ## 2.1.3 — Foundry VTT 13
 
 - Increased the default height of the configuration window.
