@@ -56,9 +56,14 @@
 <hr>
 <h2>Visible characters</h2>
 
+<div class="pcp-search-wrap">
+  <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+  <input class="pcp-actor-search" type="search" placeholder="Search characters…" aria-label="Search characters" autocomplete="off">
+</div>
+
 <section class="pcp-actor-list">
   {{#each actors}}
-    <div class="pcp-actor-row {{#unless enabled}}pcp-disabled{{/unless}}" data-actor-id="{{id}}">
+    <div class="pcp-actor-row {{#unless enabled}}pcp-disabled{{/unless}}" data-actor-id="{{id}}" data-actor-name="{{name}}">
       <div class="pcp-enable-wrap">
         <input class="pcp-enable" type="checkbox" name="actors.{{id}}.enabled" {{#if enabled}}checked{{/if}} title="Display this character">
       </div>
@@ -90,6 +95,7 @@
       </div>
     </div>
   {{/each}}
+  <p class="pcp-no-results" hidden>No characters match your search.</p>
 </section>
 
 <footer>

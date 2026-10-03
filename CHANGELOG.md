@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.1.3 — Foundry VTT 13
+
+- Increased the default height of the configuration window.
+- Added a live character search field.
+- Kept currently visible characters at the top of the list, in their configured order.
+
 ## 2.1.2 — Foundry VTT 13
 
 - Aligned the general configuration fields into consistent two-column rows.

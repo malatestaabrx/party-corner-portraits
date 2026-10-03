@@ -146,8 +146,8 @@ class PartyCornerPortraitsConfig extends HandlebarsApplicationMixin(ApplicationV
     id: "party-corner-portraits-config",
     tag: "form",
     position: {
-      width: 760,
-      height: 720
+      width: 800,
+      height: 860
     },
     window: {
       title: "Party Corner Portraits — Configuration",
@@ -257,6 +257,25 @@ class PartyCornerPortraitsConfig extends HandlebarsApplicationMixin(ApplicationV
         const currentCheckbox = event.currentTarget;
         const row = currentCheckbox.closest(".pcp-actor-row");
         row?.classList.toggle("pcp-disabled", !currentCheckbox.checked);
+      });
+    }
+
+    const actorSearch = this.element.querySelector(".pcp-actor-search");
+    const actorRows = [...this.element.querySelectorAll(".pcp-actor-row")];
+    const noResults = this.element.querySelector(".pcp-no-results");
+    if (actorSearch) {
+      actorSearch.addEventListener("input", event => {
+        const query = event.currentTarget.value.trim().toLocaleLowerCase(game.i18n.lang);
+        let matches = 0;
+
+        for (const row of actorRows) {
+          const name = row.dataset.actorName?.toLocaleLowerCase(game.i18n.lang) ?? "";
+          const visible = !query || name.includes(query);
+          row.hidden = !visible;
+          if (visible) matches += 1;
+        }
+
+        if (noResults) noResults.hidden = matches > 0;
       });
     }
   }

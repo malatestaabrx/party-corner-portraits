@@ -32,6 +32,11 @@ Compatibility
 Designed for Foundry VTT 13.
 The configuration window uses ApplicationV2 and HandlebarsApplicationMixin.
 
+Version 2.1.3
+- Increased the configuration window height.
+- Added live character search.
+- Visible characters remain at the top in their configured order.
+
 Version 2.1.2
 -------------
 - Aligned the general configuration fields into consistent two-column rows.
