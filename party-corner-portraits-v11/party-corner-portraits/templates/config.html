@@ -67,7 +67,13 @@
           <img src="{{img}}" alt="{{name}}" style="object-position: {{x}}% {{y}}%; transform-origin: {{x}}% {{y}}%; transform: scale({{zoom}});">
         </div>
 
-        <div class="pcp-actor-name">{{name}}</div>
+        <div class="pcp-actor-details">
+          <div class="pcp-actor-name">{{name}}</div>
+          <label class="pcp-sort-order" title="Lower numbers appear first. Equal numbers keep their existing order.">
+            <span>Order</span>
+            <input type="number" name="actors.{{id}}.sortOrder" value="{{sortOrder}}" min="-9999" max="9999" step="1">
+          </label>
+        </div>
 
         <div class="pcp-framing">
           <label class="pcp-slider">

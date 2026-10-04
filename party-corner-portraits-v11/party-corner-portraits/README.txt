@@ -31,6 +31,10 @@ Compatibility
 -------------
 Designed for Foundry VTT 11.
 
+Version 1.3.0
+- Added a numeric order field to each character.
+- Lower numbers appear first; equal numbers keep the existing order.
+
 Version 1.2.0
 -------------
 - Added a color picker for portrait borders.

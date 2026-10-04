@@ -128,6 +128,7 @@ class PartyCornerPortraitsConfig extends FormApplication {
           img: actor.img || "icons/svg/mystery-man.svg",
           enabled: orderIndex.has(actor.id),
           order: orderIndex.get(actor.id) ?? 999999,
+          sortOrder: Math.trunc(clamp(framing.sortOrder, -9999, 9999, 0)),
           x: clamp(framing.x, 0, 100, 50),
           y: clamp(framing.y, 0, 100, 50),
           zoom: clamp(framing.zoom, 1, 3, 1)
@@ -195,24 +196,29 @@ class PartyCornerPortraitsConfig extends FormApplication {
   async _updateObject(_event, formData) {
     const expanded = foundry.utils.expandObject(formData);
     const oldConfig = getConfig();
-    const order = [];
+    const previousOrderIndex = new Map((oldConfig.order || []).map((id, index) => [id, index]));
+    const selectedActors = [];
     const actors = {};
 
-    for (const actor of game.actors.contents) {
+    for (const [actorIndex, actor] of game.actors.contents.entries()) {
       const row = expanded.actors?.[actor.id] ?? {};
       if (!row.enabled) continue;
 
-      order.push(actor.id);
+      const sortOrder = Math.trunc(clamp(row.sortOrder, -9999, 9999, oldConfig.actors?.[actor.id]?.sortOrder ?? 0));
+      selectedActors.push({
+        id: actor.id,
+        sortOrder,
+        previousIndex: previousOrderIndex.get(actor.id) ?? previousOrderIndex.size + actorIndex
+      });
       actors[actor.id] = {
         x: clamp(row.x, 0, 100, oldConfig.actors?.[actor.id]?.x ?? 50),
         y: clamp(row.y, 0, 100, oldConfig.actors?.[actor.id]?.y ?? 50),
-        zoom: clamp(row.zoom, 1, 3, oldConfig.actors?.[actor.id]?.zoom ?? 1)
+        zoom: clamp(row.zoom, 1, 3, oldConfig.actors?.[actor.id]?.zoom ?? 1),
+        sortOrder
       };
     }
 
-    // Keep the previous order for Actors that remain selected.
-    const previousOrder = (oldConfig.order || []).filter(id => order.includes(id));
-    const newlySelected = order.filter(id => !previousOrder.includes(id));
+    selectedActors.sort((a, b) => a.sortOrder - b.sortOrder || a.previousIndex - b.previousIndex);
 
     const config = {
       position: expanded.position || DEFAULT_CONFIG.position,
@@ -222,7 +228,7 @@ class PartyCornerPortraitsConfig extends FormApplication {
       offsetY: clamp(expanded.offsetY, 0, 1000, DEFAULT_CONFIG.offsetY),
       showNames: Boolean(expanded.showNames),
       borderColor: normalizeColor(expanded.borderColor),
-      order: [...previousOrder, ...newlySelected],
+      order: selectedActors.map(actor => actor.id),
       actors
     };
 

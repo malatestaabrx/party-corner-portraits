@@ -159,6 +159,27 @@
   text-overflow: ellipsis;
 }
 
+.party-corner-portraits-form .pcp-actor-details {
+  min-width: 0;
+}
+
+.party-corner-portraits-form .pcp-sort-order {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  font-size: 11px;
+  opacity: 0.85;
+}
+
+.party-corner-portraits-form .pcp-sort-order input {
+  width: 58px;
+  height: 24px;
+  padding: 2px 4px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
 .party-corner-portraits-form .pcp-framing {
   display: grid;
   grid-template-columns: 1fr;

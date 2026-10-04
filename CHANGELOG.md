@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.3.0 — Foundry VTT 11
+
+- Added a numeric order field for each visible character.
+- Characters with lower order values appear first.
+- Characters with the same value retain their existing relative order.
+
 ## 2.2.0 — Foundry VTT 13
 
 - Added a numeric order field for each visible character.
