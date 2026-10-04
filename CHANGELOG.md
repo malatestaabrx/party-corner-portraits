@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.2.0 — Foundry VTT 13
+
+- Added a numeric order field for each visible character.
+- Characters with lower order values appear first.
+- Characters with the same value retain their existing relative order.
+
 ## 2.1.4 — Foundry VTT 13
 
 - Constrained the configuration window to the available viewport height.

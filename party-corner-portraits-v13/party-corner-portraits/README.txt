@@ -32,6 +32,10 @@ Compatibility
 Designed for Foundry VTT 13.
 The configuration window uses ApplicationV2 and HandlebarsApplicationMixin.
 
+Version 2.2.0
+- Added a numeric order field to each character.
+- Lower numbers appear first; equal numbers keep the existing order.
+
 Version 2.1.4
 - Fixed scrolling for the complete configuration form.
 - The window now fits the available screen height.
