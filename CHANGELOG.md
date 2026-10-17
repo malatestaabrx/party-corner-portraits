@@ -1,5 +1,10 @@
 # Changelog
 
+## 3.0.0 — Foundry VTT 14
+
+- Added a dedicated package compatible with Foundry VTT 14.
+- Carried forward all functionality from the Foundry VTT 13 release.
+
 ## 1.3.0 — Foundry VTT 11
 
 - Added a numeric order field for each visible character.

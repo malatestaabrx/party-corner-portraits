@@ -1,0 +1,110 @@
+<div class="pcp-config-content">
+<section class="pcp-general">
+  <div class="form-group">
+    <label>Corner</label>
+    <select name="position">
+      {{#each positions}}
+        <option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>
+      {{/each}}
+    </select>
+  </div>
+
+  <div class="form-group">
+    <label>Layout</label>
+    <select name="orientation">
+      {{#each orientations}}
+        <option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>
+      {{/each}}
+    </select>
+  </div>
+
+  <div class="form-group">
+    <label>Portrait size</label>
+    <input type="number" name="size" value="{{config.size}}" min="48" max="160" step="1">
+    <p class="notes">48–160 pixels.</p>
+  </div>
+
+  <div class="form-group">
+    <label>Show names</label>
+    <input type="checkbox" name="showNames" {{#if config.showNames}}checked{{/if}}>
+  </div>
+
+  <div class="form-group">
+    <label>Horizontal offset</label>
+    <input type="number" name="offsetX" value="{{config.offsetX}}" min="0" max="1000" step="1">
+    <p class="notes">Distance in pixels from the horizontal edge of the selected corner.</p>
+  </div>
+
+  <div class="form-group">
+    <label>Vertical offset</label>
+    <input type="number" name="offsetY" value="{{config.offsetY}}" min="0" max="1000" step="1">
+    <p class="notes">Distance in pixels from the vertical edge of the selected corner.</p>
+  </div>
+
+  <div class="form-group pcp-border-color-field">
+    <label>Border color</label>
+    <input type="color" name="borderColor" value="{{config.borderColor}}">
+    <p class="notes">Color applied to every portrait border.</p>
+  </div>
+
+  <p class="pcp-help">
+    Select every Actor you want to display. This does not depend on user assignment: a player may control two or more characters and you can display all of them.<br>
+    Offsets are measured from the selected corner: top left = left/top; top right = right/top; bottom left = left/bottom; bottom right = right/bottom.
+  </p>
+</section>
+
+<hr>
+<h2>Visible characters</h2>
+
+<div class="pcp-search-wrap">
+  <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+  <input class="pcp-actor-search" type="search" placeholder="Search characters…" aria-label="Search characters" autocomplete="off">
+</div>
+
+<section class="pcp-actor-list">
+  {{#each actors}}
+    <div class="pcp-actor-row {{#unless enabled}}pcp-disabled{{/unless}}" data-actor-id="{{id}}" data-actor-name="{{name}}">
+      <div class="pcp-enable-wrap">
+        <input class="pcp-enable" type="checkbox" name="actors.{{id}}.enabled" {{#if enabled}}checked{{/if}} title="Display this character">
+      </div>
+
+      <div class="pcp-config-preview">
+        <img src="{{img}}" alt="{{name}}" style="object-position: {{x}}% {{y}}%; transform-origin: {{x}}% {{y}}%; transform: scale({{zoom}});">
+      </div>
+
+      <div class="pcp-actor-details">
+        <div class="pcp-actor-name">{{name}}</div>
+        <label class="pcp-sort-order" title="Lower numbers appear first. Equal numbers keep their existing order.">
+          <span>Order</span>
+          <input type="number" name="actors.{{id}}.sortOrder" value="{{sortOrder}}" min="-9999" max="9999" step="1">
+        </label>
+      </div>
+
+      <div class="pcp-framing">
+        <label class="pcp-slider">
+          <span>Horizontal</span>
+          <input type="range" name="actors.{{id}}.x" value="{{x}}" min="0" max="100" step="1">
+          <output>{{x}}%</output>
+        </label>
+
+        <label class="pcp-slider">
+          <span>Vertical</span>
+          <input type="range" name="actors.{{id}}.y" value="{{y}}" min="0" max="100" step="1">
+          <output>{{y}}%</output>
+        </label>
+
+        <label class="pcp-slider">
+          <span>Zoom</span>
+          <input type="range" name="actors.{{id}}.zoom" value="{{zoom}}" min="1" max="3" step="0.05">
+          <output>{{zoom}}×</output>
+        </label>
+      </div>
+    </div>
+  {{/each}}
+  <p class="pcp-no-results" hidden>No characters match your search.</p>
+</section>
+
+<footer>
+  <button type="submit"><i class="fa-solid fa-floppy-disk"></i> Save</button>
+</footer>
+</div>

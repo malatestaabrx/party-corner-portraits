@@ -1,0 +1,29 @@
+{
+  "id": "party-corner-portraits",
+  "title": "Party Corner Portraits",
+  "description": "Displays portraits and names for GM-selected characters in a screen corner for every player. Includes individual framing and zoom, configurable border color, and horizontal and vertical offsets from the selected corner.",
+  "version": "3.0.0",
+  "authors": [
+    {
+      "name": "malatestaabrx",
+      "url": "https://github.com/malatestaabrx"
+    }
+  ],
+  "url": "https://github.com/malatestaabrx/party-corner-portraits",
+  "manifest": "https://raw.githubusercontent.com/malatestaabrx/party-corner-portraits/main/manifests/module-v14.json",
+  "download": "https://github.com/malatestaabrx/party-corner-portraits/releases/download/v3.0.0/party-corner-portraits-v14.zip",
+  "readme": "https://github.com/malatestaabrx/party-corner-portraits/blob/main/README.md",
+  "bugs": "https://github.com/malatestaabrx/party-corner-portraits/issues",
+  "changelog": "https://github.com/malatestaabrx/party-corner-portraits/blob/main/CHANGELOG.md",
+  "compatibility": {
+    "minimum": "14",
+    "verified": "14",
+    "maximum": "14"
+  },
+  "esmodules": [
+    "scripts/party-corner-portraits.js"
+  ],
+  "styles": [
+    "styles/party-corner-portraits.css"
+  ]
+}
