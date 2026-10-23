@@ -26,6 +26,7 @@ Manual installation
 4. Open Game Settings > Configure Settings > Module Settings.
 5. Find "Party Corner Portraits" and click "Configure Portraits".
 6. Select the player characters you want to display, adjust their images, and save.
+7. As GM, right-click a portrait to configure its border, name, colored markers, and resource bars.
 
 Important
 ---------

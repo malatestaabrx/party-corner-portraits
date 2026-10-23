@@ -22,6 +22,8 @@ In Foundry VTT, open **Add-on Modules → Install Module** and use the appropria
 
 Then enable **Party Corner Portraits** in your world and open **Game Settings → Configure Settings → Module Settings → Configure Portraits**.
 
+As GM, right-click a portrait to configure its border, name, colored markers, and resource bars.
+
 ## Source code
 
 - `party-corner-portraits-v11/party-corner-portraits`: Foundry VTT 11 version.
