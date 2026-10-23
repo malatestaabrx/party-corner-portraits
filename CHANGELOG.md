@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.1.0 — Foundry VTT 14
+
+- Added GM-managed colored markers to character portraits.
+- Added multiple resource bars linked to numeric fields from character sheets.
+- Added controls to create, edit, and remove markers and resource bars.
+
 ## 3.0.0 — Foundry VTT 14
 
 - Added a dedicated package compatible with Foundry VTT 14.

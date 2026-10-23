@@ -36,6 +36,237 @@ function clamp(value, min, max, fallback) {
   return Math.min(max, Math.max(min, number));
 }
 
+function normalizeMarkers(value) {
+  if (!Array.isArray(value)) return [];
+  return value.slice(0, 12).map(marker => ({
+    id: String(marker?.id || foundry.utils.randomID()),
+    color: normalizeColor(marker?.color, "#ffcc00")
+  }));
+}
+
+function normalizeResourceBars(value) {
+  if (!Array.isArray(value)) return [];
+  return value.slice(0, 8).map(bar => ({
+    id: String(bar?.id || foundry.utils.randomID()),
+    color: normalizeColor(bar?.color, "#3ba55d"),
+    currentPath: String(bar?.currentPath || ""),
+    maximumPath: String(bar?.maximumPath || "")
+  }));
+}
+
+function getNumericActorResources(actor) {
+  const flattened = foundry.utils.flattenObject(actor.system || {});
+  return Object.entries(flattened)
+    .filter(([, value]) => typeof value === "number" && Number.isFinite(value))
+    .map(([path, value]) => ({ path: `system.${path}`, value }))
+    .sort((a, b) => a.path.localeCompare(b.path, game.i18n.lang));
+}
+
+function createResourceSelect(resources, selectedPath, name) {
+  const select = document.createElement("select");
+  select.name = name;
+  const empty = document.createElement("option");
+  empty.value = "";
+  empty.textContent = "Select a resource";
+  select.append(empty);
+
+  const availablePaths = new Set(resources.map(resource => resource.path));
+  if (selectedPath && !availablePaths.has(selectedPath)) {
+    resources = [...resources, { path: selectedPath, value: "?" }];
+  }
+
+  for (const resource of resources) {
+    const option = document.createElement("option");
+    option.value = resource.path;
+    option.textContent = `${resource.path} (${resource.value})`;
+    if (resource.path === selectedPath) {
+      option.selected = true;
+      option.setAttribute("selected", "");
+    }
+    select.append(option);
+  }
+  return select;
+}
+
+async function saveActorDecorations(actorId, markers, resourceBars) {
+  const config = getConfig();
+  config.actors ??= {};
+  config.actors[actorId] = {
+    ...(config.actors[actorId] || {}),
+    markers: normalizeMarkers(markers),
+    resourceBars: normalizeResourceBars(resourceBars)
+  };
+  await game.settings.set(MODULE_ID, SETTING_KEY, config);
+}
+
+function createDialogField(labelText, input) {
+  const label = document.createElement("label");
+  label.className = "pcp-decoration-field";
+  const text = document.createElement("span");
+  text.textContent = labelText;
+  label.append(text, input);
+  return label;
+}
+
+function setDialogInputValue(input, value) {
+  const normalized = String(value);
+  input.value = normalized;
+  input.defaultValue = normalized;
+  input.setAttribute("value", normalized);
+}
+
+async function manageColorMarkers(actorId) {
+  const actor = game.actors.get(actorId);
+  if (!actor) return;
+  const framing = getConfig().actors?.[actorId] ?? {};
+  const markers = normalizeMarkers(framing.markers);
+  const content = document.createElement("div");
+  const dialogBody = document.createElement("div");
+  dialogBody.className = "pcp-decoration-dialog";
+  content.append(dialogBody);
+
+  for (const [index, marker] of markers.entries()) {
+    const row = document.createElement("div");
+    row.className = "pcp-decoration-row";
+    row.dataset.index = String(index);
+    const color = document.createElement("input");
+    color.type = "color";
+    color.name = "color";
+    setDialogInputValue(color, marker.color);
+    const remove = document.createElement("input");
+    remove.type = "checkbox";
+    remove.name = "remove";
+    row.append(createDialogField(`Dot ${index + 1}`, color), createDialogField("Remove", remove));
+    dialogBody.append(row);
+  }
+
+  const add = document.createElement("div");
+  add.className = "pcp-decoration-add";
+  const addEnabled = document.createElement("input");
+  addEnabled.type = "checkbox";
+  addEnabled.name = "add";
+  const addColor = document.createElement("input");
+  addColor.type = "color";
+  addColor.name = "addColor";
+  setDialogInputValue(addColor, "#ffcc00");
+  add.append(createDialogField("Add another dot", addEnabled), createDialogField("Color", addColor));
+  dialogBody.append(add);
+
+  const result = await foundry.applications.api.DialogV2.wait({
+    window: { title: `Color dots — ${actor.name}` },
+    content,
+    modal: true,
+    buttons: [
+      {
+        action: "save",
+        label: "Save",
+        icon: "fa-solid fa-floppy-disk",
+        default: true,
+        callback: (_event, button) => {
+          const updated = [...button.form.querySelectorAll(".pcp-decoration-row")]
+            .filter(row => !row.querySelector('[name="remove"]')?.checked)
+            .map(row => ({
+              id: markers[Number(row.dataset.index)]?.id || foundry.utils.randomID(),
+              color: normalizeColor(row.querySelector('[name="color"]')?.value, "#ffcc00")
+            }));
+          if (button.form.elements.add?.checked) {
+            updated.push({ id: foundry.utils.randomID(), color: normalizeColor(button.form.elements.addColor?.value, "#ffcc00") });
+          }
+          return updated;
+        }
+      },
+      { action: "cancel", label: "Cancel", icon: "fa-solid fa-xmark" }
+    ]
+  });
+
+  if (!Array.isArray(result)) return;
+  await saveActorDecorations(actorId, result, normalizeResourceBars(framing.resourceBars));
+}
+
+async function manageResourceBars(actorId) {
+  const actor = game.actors.get(actorId);
+  if (!actor) return;
+  const framing = getConfig().actors?.[actorId] ?? {};
+  const bars = normalizeResourceBars(framing.resourceBars);
+  const resources = getNumericActorResources(actor);
+  const content = document.createElement("div");
+  const dialogBody = document.createElement("div");
+  dialogBody.className = "pcp-decoration-dialog";
+  content.append(dialogBody);
+
+  for (const [index, bar] of bars.entries()) {
+    const row = document.createElement("div");
+    row.className = "pcp-decoration-row pcp-resource-dialog-row";
+    row.dataset.index = String(index);
+    const current = createResourceSelect(resources, bar.currentPath, "currentPath");
+    const maximum = createResourceSelect(resources, bar.maximumPath, "maximumPath");
+    const color = document.createElement("input");
+    color.type = "color";
+    color.name = "color";
+    setDialogInputValue(color, bar.color);
+    const remove = document.createElement("input");
+    remove.type = "checkbox";
+    remove.name = "remove";
+    row.append(createDialogField(`Bar ${index + 1} current`, current), createDialogField("Maximum", maximum), createDialogField("Color", color), createDialogField("Remove", remove));
+    dialogBody.append(row);
+  }
+
+  const add = document.createElement("div");
+  add.className = "pcp-decoration-add pcp-resource-dialog-row";
+  const addEnabled = document.createElement("input");
+  addEnabled.type = "checkbox";
+  addEnabled.name = "add";
+  const addCurrent = createResourceSelect(resources, "", "addCurrentPath");
+  const addMaximum = createResourceSelect(resources, "", "addMaximumPath");
+  const addColor = document.createElement("input");
+  addColor.type = "color";
+  addColor.name = "addColor";
+  setDialogInputValue(addColor, "#3ba55d");
+  add.append(createDialogField("Add another bar", addEnabled), createDialogField("Current", addCurrent), createDialogField("Maximum", addMaximum), createDialogField("Color", addColor));
+  dialogBody.append(add);
+
+  const readBar = (row, original = {}) => {
+    return {
+      id: original.id || foundry.utils.randomID(),
+      color: normalizeColor(row.querySelector('[name="color"]')?.value, "#3ba55d"),
+      currentPath: String(row.querySelector('[name="currentPath"]')?.value || ""),
+      maximumPath: String(row.querySelector('[name="maximumPath"]')?.value || "")
+    };
+  };
+
+  const result = await foundry.applications.api.DialogV2.wait({
+    window: { title: `Resource bars — ${actor.name}` },
+    content,
+    modal: true,
+    buttons: [
+      {
+        action: "save",
+        label: "Save",
+        icon: "fa-solid fa-floppy-disk",
+        default: true,
+        callback: (_event, button) => {
+          const updated = [...button.form.querySelectorAll(".pcp-decoration-row")]
+            .filter(row => !row.querySelector('[name="remove"]')?.checked)
+            .map(row => readBar(row, bars[Number(row.dataset.index)]));
+          if (button.form.elements.add?.checked) {
+            updated.push({
+              id: foundry.utils.randomID(),
+              color: normalizeColor(button.form.elements.addColor?.value, "#3ba55d"),
+              currentPath: String(button.form.elements.addCurrentPath?.value || ""),
+              maximumPath: String(button.form.elements.addMaximumPath?.value || "")
+            });
+          }
+          return updated.filter(bar => bar.currentPath && bar.maximumPath);
+        }
+      },
+      { action: "cancel", label: "Cancel", icon: "fa-solid fa-xmark" }
+    ]
+  });
+
+  if (!Array.isArray(result)) return;
+  await saveActorDecorations(actorId, normalizeMarkers(framing.markers), result);
+}
+
 function removeHud() {
   document.getElementById("pcp-party-hud")?.remove();
 }
@@ -82,6 +313,43 @@ function renderHud() {
     img.style.transform = `scale(${zoom})`;
 
     portrait.appendChild(img);
+
+    const markers = normalizeMarkers(framing.markers);
+    if (markers.length) {
+      const markerContainer = document.createElement("div");
+      markerContainer.className = "pcp-color-markers";
+      for (const marker of markers) {
+        const dot = document.createElement("span");
+        dot.className = "pcp-color-marker";
+        dot.style.setProperty("--pcp-marker-color", marker.color);
+        markerContainer.appendChild(dot);
+      }
+      portrait.appendChild(markerContainer);
+    }
+
+    const resourceBars = normalizeResourceBars(framing.resourceBars);
+    if (resourceBars.length) {
+      const barContainer = document.createElement("div");
+      barContainer.className = "pcp-resource-bars";
+      for (const bar of resourceBars) {
+        const current = Number(foundry.utils.getProperty(actor, bar.currentPath));
+        const maximum = Number(foundry.utils.getProperty(actor, bar.maximumPath));
+        if (!Number.isFinite(current) || !Number.isFinite(maximum) || maximum <= 0) continue;
+        const track = document.createElement("div");
+        track.className = "pcp-resource-bar";
+        track.title = `${bar.currentPath}: ${current} / ${maximum}`;
+        track.style.setProperty("--pcp-resource-color", bar.color);
+        const fill = document.createElement("span");
+        fill.style.width = `${clamp((current / maximum) * 100, 0, 100, 0)}%`;
+        track.appendChild(fill);
+        barContainer.appendChild(track);
+      }
+      if (barContainer.children.length) {
+        card.classList.add("pcp-has-resource-bars");
+        card.style.setProperty("--pcp-resource-stack-height", `${barContainer.children.length * 4 + 1}px`);
+        portrait.appendChild(barContainer);
+      }
+    }
     card.appendChild(portrait);
 
     if (config.showNames !== false) {
@@ -100,6 +368,22 @@ function renderHud() {
 
   if (!hud.children.length) return;
   document.body.appendChild(hud);
+
+  if (game.user.isGM) {
+    const { ContextMenu } = foundry.applications.ux;
+    new ContextMenu(hud, ".pcp-card", [
+      {
+        label: "Manage color dots",
+        icon: "fa-solid fa-circle",
+        onClick: (_event, target) => manageColorMarkers(target.dataset.actorId)
+      },
+      {
+        label: "Manage resource bars",
+        icon: "fa-solid fa-bars-progress",
+        onClick: (_event, target) => manageResourceBars(target.dataset.actorId)
+      }
+    ], { fixed: true, relative: "cursor" });
+  }
 }
 
 async function submitConfiguration(_event, _form, formData) {
@@ -123,7 +407,9 @@ async function submitConfiguration(_event, _form, formData) {
       x: clamp(row.x, 0, 100, oldConfig.actors?.[actor.id]?.x ?? 50),
       y: clamp(row.y, 0, 100, oldConfig.actors?.[actor.id]?.y ?? 50),
       zoom: clamp(row.zoom, 1, 3, oldConfig.actors?.[actor.id]?.zoom ?? 1),
-      sortOrder
+      sortOrder,
+      markers: normalizeMarkers(oldConfig.actors?.[actor.id]?.markers),
+      resourceBars: normalizeResourceBars(oldConfig.actors?.[actor.id]?.resourceBars)
     };
   }
 

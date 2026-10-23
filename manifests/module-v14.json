@@ -1,8 +1,8 @@
 {
   "id": "party-corner-portraits",
   "title": "Party Corner Portraits",
-  "description": "Displays portraits and names for GM-selected characters in a screen corner for every player. Includes individual framing and zoom, configurable border color, and horizontal and vertical offsets from the selected corner.",
-  "version": "3.0.0",
+  "description": "Party Corner Portraits displays customizable character portraits in a corner of Foundry VTT, with ordering, colored markers, resource bars, names, framing, and quick access to character sheets.",
+  "version": "3.1.0",
   "authors": [
     {
       "name": "malatestaabrx",
@@ -11,7 +11,7 @@
   ],
   "url": "https://github.com/malatestaabrx/party-corner-portraits",
   "manifest": "https://raw.githubusercontent.com/malatestaabrx/party-corner-portraits/main/manifests/module-v14.json",
-  "download": "https://github.com/malatestaabrx/party-corner-portraits/releases/download/v3.0.0/party-corner-portraits-v14.zip",
+  "download": "https://github.com/malatestaabrx/party-corner-portraits/releases/download/v3.1.0/party-corner-portraits-v14.zip",
   "readme": "https://github.com/malatestaabrx/party-corner-portraits/blob/main/README.md",
   "bugs": "https://github.com/malatestaabrx/party-corner-portraits/issues",
   "changelog": "https://github.com/malatestaabrx/party-corner-portraits/blob/main/CHANGELOG.md",
