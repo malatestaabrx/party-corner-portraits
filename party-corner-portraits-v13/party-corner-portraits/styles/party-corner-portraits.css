@@ -88,21 +88,21 @@
 #pcp-party-hud .pcp-resource-bars {
   position: absolute;
   right: 0;
-  bottom: 1px;
+  bottom: var(--pcp-resource-bottom-offset, 1px);
   left: 0;
   z-index: 3;
   display: flex;
   flex-direction: column;
-  gap: 0;
+  gap: var(--pcp-resource-bar-spacing, 0);
   pointer-events: none;
 }
 
 #pcp-party-hud .pcp-resource-bar {
-  height: 4px;
+  height: var(--pcp-resource-bar-height, 4px);
   overflow: hidden;
   border: 0;
   border-radius: 0;
-  background: color-mix(in srgb, var(--pcp-resource-color) 30%, transparent);
+  background: color-mix(in srgb, var(--pcp-resource-color) var(--pcp-resource-depleted-opacity, 30%), transparent);
 }
 
 #pcp-party-hud .pcp-resource-bar > span {
@@ -167,7 +167,20 @@
 }
 
 .pcp-resource-dialog-row {
-  grid-template-columns: minmax(180px, 2fr) minmax(180px, 2fr) minmax(72px, 0.7fr) minmax(72px, 0.7fr);
+  grid-template-columns: minmax(140px, 2fr) minmax(140px, 2fr) repeat(3, minmax(70px, 0.7fr));
+}
+
+.pcp-resource-dialog {
+  width: min(680px, calc(100vw - 120px));
+  max-height: min(70vh, 650px);
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.pcp-resource-general-settings {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(120px, 160px));
+  gap: 12px;
 }
 
 .pcp-add-resource-bar {

@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.4.0 — Foundry VTT 13
+
+- Added configurable bar height, bottom offset, spacing, and depleted-area opacity.
+- Replaced the single new-bar controls with an **Add another bar** button.
+
+## 3.2.0 — Foundry VTT 14
+
+- Added configurable bar height, bottom offset, spacing, and depleted-area opacity.
+- Replaced the single new-bar controls with an **Add another bar** button.
+
 ## 2.3.0 — Foundry VTT 13
 
 - Added GM-managed colored markers to character portraits.

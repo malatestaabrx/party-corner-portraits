@@ -12,6 +12,7 @@ Features
 - Provides a configurable border color for every portrait.
 - Supports multiple GM-managed colored markers per portrait.
 - Supports multiple resource bars linked to numeric character-sheet fields.
+- Supports configurable bar height, bottom offset, spacing, and depleted-area opacity.
 - Clicking a portrait opens its sheet when the user has permission to view that Actor.
 
 Manual installation
@@ -33,6 +34,10 @@ Compatibility
 -------------
 Designed for Foundry VTT 14.
 The configuration window uses ApplicationV2 and HandlebarsApplicationMixin.
+
+Version 3.2.0
+- Added configurable bar height, bottom offset, spacing, and depleted-area opacity.
+- Added an "Add another bar" button for creating multiple bars in one edit.
 
 Version 3.1.0
 - Added GM-only portrait context menus for color dots and resource bars.

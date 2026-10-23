@@ -50,8 +50,21 @@ function normalizeResourceBars(value) {
     id: String(bar?.id || foundry.utils.randomID()),
     color: normalizeColor(bar?.color, "#3ba55d"),
     currentPath: String(bar?.currentPath || ""),
-    maximumPath: String(bar?.maximumPath || "")
+    maximumPath: String(bar?.maximumPath || ""),
+    height: Math.trunc(clamp(bar?.height, 1, 20, 4))
   }));
+}
+
+function normalizeResourceBarOffset(value) {
+  return Math.trunc(clamp(value, 0, 100, 1));
+}
+
+function normalizeResourceBarDepletedOpacity(value) {
+  return Math.trunc(clamp(value, 0, 100, 30));
+}
+
+function normalizeResourceBarSpacing(value) {
+  return Math.trunc(clamp(value, 0, 20, 0));
 }
 
 function getNumericActorResources(actor) {
@@ -88,13 +101,17 @@ function createResourceSelect(resources, selectedPath, name) {
   return select;
 }
 
-async function saveActorDecorations(actorId, markers, resourceBars) {
+async function saveActorDecorations(actorId, markers, resourceBars, resourceBarOffset, resourceBarDepletedOpacity, resourceBarSpacing) {
   const config = getConfig();
   config.actors ??= {};
+  const actorConfig = config.actors[actorId] || {};
   config.actors[actorId] = {
-    ...(config.actors[actorId] || {}),
+    ...actorConfig,
     markers: normalizeMarkers(markers),
-    resourceBars: normalizeResourceBars(resourceBars)
+    resourceBars: normalizeResourceBars(resourceBars),
+    resourceBarOffset: normalizeResourceBarOffset(resourceBarOffset ?? actorConfig.resourceBarOffset),
+    resourceBarDepletedOpacity: normalizeResourceBarDepletedOpacity(resourceBarDepletedOpacity ?? actorConfig.resourceBarDepletedOpacity),
+    resourceBarSpacing: normalizeResourceBarSpacing(resourceBarSpacing ?? actorConfig.resourceBarSpacing)
   };
   await game.settings.set(MODULE_ID, SETTING_KEY, config);
 }
@@ -180,7 +197,14 @@ async function manageColorMarkers(actorId) {
   });
 
   if (!Array.isArray(result)) return;
-  await saveActorDecorations(actorId, result, normalizeResourceBars(framing.resourceBars));
+  await saveActorDecorations(
+    actorId,
+    result,
+    normalizeResourceBars(framing.resourceBars),
+    framing.resourceBarOffset,
+    framing.resourceBarDepletedOpacity,
+    framing.resourceBarSpacing
+  );
 }
 
 async function manageResourceBars(actorId) {
@@ -191,8 +215,37 @@ async function manageResourceBars(actorId) {
   const resources = getNumericActorResources(actor);
   const content = document.createElement("div");
   const dialogBody = document.createElement("div");
-  dialogBody.className = "pcp-decoration-dialog";
+  dialogBody.className = "pcp-decoration-dialog pcp-resource-dialog";
   content.append(dialogBody);
+
+  const bottomOffset = document.createElement("input");
+  bottomOffset.type = "number";
+  bottomOffset.name = "bottomOffset";
+  bottomOffset.min = "0";
+  bottomOffset.max = "100";
+  bottomOffset.step = "1";
+  setDialogInputValue(bottomOffset, normalizeResourceBarOffset(framing.resourceBarOffset));
+
+  const depletedOpacity = document.createElement("input");
+  depletedOpacity.type = "number";
+  depletedOpacity.name = "depletedOpacity";
+  depletedOpacity.min = "0";
+  depletedOpacity.max = "100";
+  depletedOpacity.step = "1";
+  setDialogInputValue(depletedOpacity, normalizeResourceBarDepletedOpacity(framing.resourceBarDepletedOpacity));
+
+  const spacing = document.createElement("input");
+  spacing.type = "number";
+  spacing.name = "spacing";
+  spacing.min = "0";
+  spacing.max = "20";
+  spacing.step = "1";
+  setDialogInputValue(spacing, normalizeResourceBarSpacing(framing.resourceBarSpacing));
+
+  const generalSettings = document.createElement("div");
+  generalSettings.className = "pcp-resource-general-settings";
+  generalSettings.append(createDialogField("Bottom offset (px)", bottomOffset), createDialogField("Depleted opacity (%)", depletedOpacity), createDialogField("Bar spacing (px)", spacing));
+  dialogBody.append(generalSettings);
 
   const createBarRow = (bar = {}, index = null) => {
     const row = document.createElement("div");
@@ -204,11 +257,18 @@ async function manageResourceBars(actorId) {
     color.type = "color";
     color.name = "color";
     setDialogInputValue(color, bar.color || "#3ba55d");
+    const height = document.createElement("input");
+    height.type = "number";
+    height.name = "height";
+    height.min = "1";
+    height.max = "20";
+    height.step = "1";
+    setDialogInputValue(height, Math.trunc(clamp(bar.height, 1, 20, 4)));
     const remove = document.createElement("input");
     remove.type = "checkbox";
     remove.name = "remove";
     const label = index === null ? "Current" : `Bar ${index + 1} current`;
-    row.append(createDialogField(label, current), createDialogField("Maximum", maximum), createDialogField("Color", color), createDialogField("Remove", remove));
+    row.append(createDialogField(label, current), createDialogField("Maximum", maximum), createDialogField("Color", color), createDialogField("Height (px)", height), createDialogField("Remove", remove));
     return row;
   };
 
@@ -227,7 +287,8 @@ async function manageResourceBars(actorId) {
       id: original.id || foundry.utils.randomID(),
       color: normalizeColor(row.querySelector('[name="color"]')?.value, "#3ba55d"),
       currentPath: String(row.querySelector('[name="currentPath"]')?.value || ""),
-      maximumPath: String(row.querySelector('[name="maximumPath"]')?.value || "")
+      maximumPath: String(row.querySelector('[name="maximumPath"]')?.value || ""),
+      height: Math.trunc(clamp(row.querySelector('[name="height"]')?.value, 1, 20, 4))
     };
   };
 
@@ -252,15 +313,20 @@ async function manageResourceBars(actorId) {
           const updated = [...button.form.querySelectorAll(".pcp-decoration-row")]
             .filter(row => !row.querySelector('[name="remove"]')?.checked)
             .map(row => readBar(row, bars[Number(row.dataset.index)]));
-          return updated.filter(bar => bar.currentPath && bar.maximumPath);
+          return {
+            bars: updated.filter(bar => bar.currentPath && bar.maximumPath),
+            bottomOffset: normalizeResourceBarOffset(button.form.elements.bottomOffset?.value),
+            depletedOpacity: normalizeResourceBarDepletedOpacity(button.form.elements.depletedOpacity?.value),
+            spacing: normalizeResourceBarSpacing(button.form.elements.spacing?.value)
+          };
         }
       },
       { action: "cancel", label: "Cancel", icon: "fa-solid fa-xmark" }
     ]
   });
 
-  if (!Array.isArray(result)) return;
-  await saveActorDecorations(actorId, normalizeMarkers(framing.markers), result);
+  if (!result || !Array.isArray(result.bars)) return;
+  await saveActorDecorations(actorId, normalizeMarkers(framing.markers), result.bars, result.bottomOffset, result.depletedOpacity, result.spacing);
 }
 
 function removeHud() {
@@ -325,8 +391,14 @@ function renderHud() {
 
     const resourceBars = normalizeResourceBars(framing.resourceBars);
     if (resourceBars.length) {
+      const bottomOffset = normalizeResourceBarOffset(framing.resourceBarOffset);
+      const depletedOpacity = normalizeResourceBarDepletedOpacity(framing.resourceBarDepletedOpacity);
+      const spacing = normalizeResourceBarSpacing(framing.resourceBarSpacing);
       const barContainer = document.createElement("div");
       barContainer.className = "pcp-resource-bars";
+      barContainer.style.setProperty("--pcp-resource-bottom-offset", `${bottomOffset}px`);
+      barContainer.style.setProperty("--pcp-resource-bar-spacing", `${spacing}px`);
+      let renderedBarHeight = 0;
       for (const bar of resourceBars) {
         const current = Number(foundry.utils.getProperty(actor, bar.currentPath));
         const maximum = Number(foundry.utils.getProperty(actor, bar.maximumPath));
@@ -335,14 +407,18 @@ function renderHud() {
         track.className = "pcp-resource-bar";
         track.title = `${bar.currentPath}: ${current} / ${maximum}`;
         track.style.setProperty("--pcp-resource-color", bar.color);
+        track.style.setProperty("--pcp-resource-depleted-opacity", `${depletedOpacity}%`);
+        track.style.setProperty("--pcp-resource-bar-height", `${bar.height}px`);
         const fill = document.createElement("span");
         fill.style.width = `${clamp((current / maximum) * 100, 0, 100, 0)}%`;
         track.appendChild(fill);
         barContainer.appendChild(track);
+        renderedBarHeight += bar.height;
       }
       if (barContainer.children.length) {
         card.classList.add("pcp-has-resource-bars");
-        card.style.setProperty("--pcp-resource-stack-height", `${barContainer.children.length * 4.5 + 1}px`);
+        const spacingHeight = Math.max(0, barContainer.children.length - 1) * spacing;
+        card.style.setProperty("--pcp-resource-stack-height", `${bottomOffset + renderedBarHeight + spacingHeight + barContainer.children.length * 0.5}px`);
         portrait.appendChild(barContainer);
       }
     }
@@ -411,7 +487,10 @@ async function submitConfiguration(_event, _form, formData) {
       zoom: clamp(row.zoom, 1, 3, oldConfig.actors?.[actor.id]?.zoom ?? 1),
       sortOrder,
       markers: normalizeMarkers(oldConfig.actors?.[actor.id]?.markers),
-      resourceBars: normalizeResourceBars(oldConfig.actors?.[actor.id]?.resourceBars)
+      resourceBars: normalizeResourceBars(oldConfig.actors?.[actor.id]?.resourceBars),
+      resourceBarOffset: normalizeResourceBarOffset(oldConfig.actors?.[actor.id]?.resourceBarOffset),
+      resourceBarDepletedOpacity: normalizeResourceBarDepletedOpacity(oldConfig.actors?.[actor.id]?.resourceBarDepletedOpacity),
+      resourceBarSpacing: normalizeResourceBarSpacing(oldConfig.actors?.[actor.id]?.resourceBarSpacing)
     };
   }
 
