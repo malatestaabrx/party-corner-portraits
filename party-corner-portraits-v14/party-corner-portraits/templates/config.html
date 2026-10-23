@@ -41,12 +41,6 @@
     <p class="notes">Distance in pixels from the vertical edge of the selected corner.</p>
   </div>
 
-  <div class="form-group pcp-border-color-field">
-    <label>Border color</label>
-    <input type="color" name="borderColor" value="{{config.borderColor}}">
-    <p class="notes">Color applied to every portrait border.</p>
-  </div>
-
   <p class="pcp-help">
     Select every Actor you want to display. This does not depend on user assignment: a player may control two or more characters and you can display all of them.<br>
     Offsets are measured from the selected corner: top left = left/top; top right = right/top; bottom left = left/bottom; bottom right = right/bottom.
@@ -68,7 +62,7 @@
         <input class="pcp-enable" type="checkbox" name="actors.{{id}}.enabled" {{#if enabled}}checked{{/if}} title="Display this character">
       </div>
 
-      <div class="pcp-config-preview">
+      <div class="pcp-config-preview" style="--pcp-border-color: {{borderColor}}; --pcp-border-width: {{borderWidth}}px;">
         <img src="{{img}}" alt="{{name}}" style="object-position: {{x}}% {{y}}%; transform-origin: {{x}}% {{y}}%; transform: scale({{zoom}});">
       </div>
 

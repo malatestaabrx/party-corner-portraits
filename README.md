@@ -10,7 +10,7 @@ Party Corner Portraits displays your party’s character portraits in a corner o
 | --- | --- |
 | 1.3.0 | 11 |
 | 2.5.0 | 13 |
-| 3.2.0 | 14 |
+| 3.3.0 | 14 |
 
 ## Installation
 

@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.3.0 — Foundry VTT 14
+
+- Added a unified portrait options panel for borders, names, colored markers, and resource bars.
+- Added optional custom names and per-character name styling and placement.
+- Added per-character border styling and controls to apply border, name, or bar settings to all visible characters.
+
 ## 2.5.0 — Foundry VTT 13
 
 - Added a unified portrait options panel for borders, names, colored markers, and resource bars.

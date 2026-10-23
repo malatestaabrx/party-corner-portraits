@@ -44,10 +44,11 @@
 
 #pcp-party-hud .pcp-card {
   position: relative;
+  box-sizing: border-box;
   width: var(--pcp-size);
   height: var(--pcp-size);
   flex: 0 0 var(--pcp-size);
-  border: 2px solid var(--pcp-border-color);
+  border: var(--pcp-border-width, 2px) solid var(--pcp-border-color);
   border-radius: 9px;
   overflow: hidden;
   background: rgba(10, 10, 12, 0.92);
@@ -126,22 +127,18 @@
   position: absolute;
   left: 0;
   right: 0;
-  bottom: 0;
+  bottom: calc(var(--pcp-name-base-bottom, 0px) + var(--pcp-name-offset, 0px));
   padding: 4px 4px 3px;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
   text-align: center;
-  font-size: max(10px, calc(var(--pcp-size) * 0.14));
+  font-size: var(--pcp-name-font-size, max(10px, calc(var(--pcp-size) * 0.14)));
   line-height: 1.1;
   font-weight: 600;
-  color: #fff;
+  color: var(--pcp-name-color, #fff);
   text-shadow: 0 1px 2px #000, 0 0 4px #000;
   background: linear-gradient(transparent, rgba(0, 0, 0, 0.92));
-}
-
-#pcp-party-hud .pcp-card.pcp-has-resource-bars .pcp-name {
-  bottom: var(--pcp-resource-stack-height);
 }
 
 /* Configuration */
@@ -170,11 +167,50 @@
   grid-template-columns: minmax(140px, 2fr) minmax(140px, 2fr) repeat(3, minmax(70px, 0.7fr));
 }
 
-.pcp-resource-dialog {
-  width: min(680px, calc(100vw - 120px));
-  max-height: min(70vh, 650px);
+.pcp-portrait-options-dialog {
+  width: min(760px, calc(100vw - 120px));
+  max-height: min(75vh, 720px);
   overflow-y: auto;
   padding-right: 4px;
+}
+
+.pcp-options-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid rgba(128, 128, 128, 0.35);
+  border-radius: 6px;
+}
+
+.pcp-options-section > h3 {
+  margin: 0;
+}
+
+.pcp-options-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pcp-border-settings,
+.pcp-name-settings {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(120px, 1fr));
+  gap: 10px 12px;
+}
+
+.pcp-border-settings .pcp-decoration-field:last-child,
+.pcp-name-settings .pcp-decoration-field:last-child,
+.pcp-options-section > .pcp-decoration-field:last-child {
+  grid-column: 1 / -1;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+
+.pcp-marker-dialog-row {
+  grid-template-columns: minmax(120px, 160px) minmax(72px, 100px);
 }
 
 .pcp-resource-general-settings {
@@ -183,7 +219,8 @@
   gap: 12px;
 }
 
-.pcp-add-resource-bar {
+.pcp-add-resource-bar,
+.pcp-add-marker {
   align-self: flex-start;
   width: auto;
 }
@@ -255,12 +292,6 @@
   grid-column: 2;
   grid-row: 2;
   margin: 2px 0 0;
-}
-
-.party-corner-portraits-form .pcp-border-color-field {
-  grid-column: 1 / -1;
-  grid-template-columns: minmax(130px, 1fr) minmax(110px, 1fr) !important;
-  max-width: calc(50% - 9px);
 }
 
 .party-corner-portraits-form .pcp-help {
@@ -336,7 +367,7 @@
   width: 64px;
   height: 64px;
   overflow: hidden;
-  border: 2px solid var(--pcp-border-color, #dccdaf);
+  border: var(--pcp-border-width, 2px) solid var(--pcp-border-color, #dccdaf);
   border-radius: 5px;
   background: #111;
 }
