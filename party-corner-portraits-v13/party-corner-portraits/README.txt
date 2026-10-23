@@ -9,10 +9,12 @@ Features
 - Adjusts horizontal position, vertical position, and zoom for each portrait without modifying the original image.
 - Supports all four screen corners.
 - Supports horizontal and vertical layouts.
-- Provides a configurable border color for every portrait.
+- Provides configurable border color and width for each portrait.
+- Supports optional custom names with configurable size, color, and placement.
 - Supports multiple GM-managed colored markers per portrait.
 - Supports multiple resource bars linked to numeric character-sheet fields.
 - Supports configurable bar height, bottom offset, spacing, and depleted-area opacity.
+- Allows border, name-style, and resource-bar settings to be applied to all visible characters.
 - Clicking a portrait opens its sheet when the user has permission to view that Actor.
 
 Manual installation
@@ -34,6 +36,11 @@ Compatibility
 -------------
 Designed for Foundry VTT 13.
 The configuration window uses ApplicationV2 and HandlebarsApplicationMixin.
+
+Version 2.5.0
+- Added a unified portrait options panel for borders, names, colored markers, and resource bars.
+- Added optional custom names and per-character name styling and placement.
+- Added controls to apply border, name-style, or bar settings to every visible character.
 
 Version 2.4.0
 - Added configurable bar height, bottom offset, spacing, and depleted-area opacity.

@@ -67,6 +67,23 @@ function normalizeResourceBarSpacing(value) {
   return Math.trunc(clamp(value, 0, 20, 0));
 }
 
+function normalizeBorderWidth(value) {
+  return Math.trunc(clamp(value, 0, 20, 2));
+}
+
+function normalizeNameFontSize(value, portraitSize = DEFAULT_CONFIG.size) {
+  const fallback = Math.max(10, Math.round(clamp(portraitSize, 48, 160, DEFAULT_CONFIG.size) * 0.14));
+  return Math.trunc(clamp(value, 8, 64, fallback));
+}
+
+function normalizeNameOffset(value) {
+  return Math.trunc(clamp(value, 0, 100, 0));
+}
+
+function normalizeCustomName(value) {
+  return String(value ?? "").trim().slice(0, 100);
+}
+
 function getNumericActorResources(actor) {
   const flattened = foundry.utils.flattenObject(actor.system || {});
   return Object.entries(flattened)
@@ -101,21 +118,6 @@ function createResourceSelect(resources, selectedPath, name) {
   return select;
 }
 
-async function saveActorDecorations(actorId, markers, resourceBars, resourceBarOffset, resourceBarDepletedOpacity, resourceBarSpacing) {
-  const config = getConfig();
-  config.actors ??= {};
-  const actorConfig = config.actors[actorId] || {};
-  config.actors[actorId] = {
-    ...actorConfig,
-    markers: normalizeMarkers(markers),
-    resourceBars: normalizeResourceBars(resourceBars),
-    resourceBarOffset: normalizeResourceBarOffset(resourceBarOffset ?? actorConfig.resourceBarOffset),
-    resourceBarDepletedOpacity: normalizeResourceBarDepletedOpacity(resourceBarDepletedOpacity ?? actorConfig.resourceBarDepletedOpacity),
-    resourceBarSpacing: normalizeResourceBarSpacing(resourceBarSpacing ?? actorConfig.resourceBarSpacing)
-  };
-  await game.settings.set(MODULE_ID, SETTING_KEY, config);
-}
-
 function createDialogField(labelText, input) {
   const label = document.createElement("label");
   label.className = "pcp-decoration-field";
@@ -132,92 +134,137 @@ function setDialogInputValue(input, value) {
   input.setAttribute("value", normalized);
 }
 
-async function manageColorMarkers(actorId) {
-  const actor = game.actors.get(actorId);
-  if (!actor) return;
-  const framing = getConfig().actors?.[actorId] ?? {};
-  const markers = normalizeMarkers(framing.markers);
-  const content = document.createElement("div");
-  const dialogBody = document.createElement("div");
-  dialogBody.className = "pcp-decoration-dialog";
-  content.append(dialogBody);
-
-  for (const [index, marker] of markers.entries()) {
-    const row = document.createElement("div");
-    row.className = "pcp-decoration-row";
-    row.dataset.index = String(index);
-    const color = document.createElement("input");
-    color.type = "color";
-    color.name = "color";
-    setDialogInputValue(color, marker.color);
-    const remove = document.createElement("input");
-    remove.type = "checkbox";
-    remove.name = "remove";
-    row.append(createDialogField(`Dot ${index + 1}`, color), createDialogField("Remove", remove));
-    dialogBody.append(row);
-  }
-
-  const add = document.createElement("div");
-  add.className = "pcp-decoration-add";
-  const addEnabled = document.createElement("input");
-  addEnabled.type = "checkbox";
-  addEnabled.name = "add";
-  const addColor = document.createElement("input");
-  addColor.type = "color";
-  addColor.name = "addColor";
-  setDialogInputValue(addColor, "#ffcc00");
-  add.append(createDialogField("Add another dot", addEnabled), createDialogField("Color", addColor));
-  dialogBody.append(add);
-
-  const result = await foundry.applications.api.DialogV2.wait({
-    window: { title: `Color dots — ${actor.name}` },
-    content,
-    modal: true,
-    buttons: [
-      {
-        action: "save",
-        label: "Save",
-        icon: "fa-solid fa-floppy-disk",
-        default: true,
-        callback: (_event, button) => {
-          const updated = [...button.form.querySelectorAll(".pcp-decoration-row")]
-            .filter(row => !row.querySelector('[name="remove"]')?.checked)
-            .map(row => ({
-              id: markers[Number(row.dataset.index)]?.id || foundry.utils.randomID(),
-              color: normalizeColor(row.querySelector('[name="color"]')?.value, "#ffcc00")
-            }));
-          if (button.form.elements.add?.checked) {
-            updated.push({ id: foundry.utils.randomID(), color: normalizeColor(button.form.elements.addColor?.value, "#ffcc00") });
-          }
-          return updated;
-        }
-      },
-      { action: "cancel", label: "Cancel", icon: "fa-solid fa-xmark" }
-    ]
-  });
-
-  if (!Array.isArray(result)) return;
-  await saveActorDecorations(
-    actorId,
-    result,
-    normalizeResourceBars(framing.resourceBars),
-    framing.resourceBarOffset,
-    framing.resourceBarDepletedOpacity,
-    framing.resourceBarSpacing
-  );
+function createDialogSection(title) {
+  const section = document.createElement("section");
+  section.className = "pcp-options-section";
+  const heading = document.createElement("h3");
+  heading.textContent = title;
+  section.append(heading);
+  return section;
 }
 
-async function manageResourceBars(actorId) {
+async function managePortraitOptions(actorId) {
   const actor = game.actors.get(actorId);
   if (!actor) return;
-  const framing = getConfig().actors?.[actorId] ?? {};
+  const config = getConfig();
+  const framing = config.actors?.[actorId] ?? {};
+  const markers = normalizeMarkers(framing.markers);
   const bars = normalizeResourceBars(framing.resourceBars);
   const resources = getNumericActorResources(actor);
   const content = document.createElement("div");
   const dialogBody = document.createElement("div");
-  dialogBody.className = "pcp-decoration-dialog pcp-resource-dialog";
+  dialogBody.className = "pcp-decoration-dialog pcp-portrait-options-dialog";
   content.append(dialogBody);
 
+  const borderColor = document.createElement("input");
+  borderColor.type = "color";
+  borderColor.name = "borderColor";
+  setDialogInputValue(borderColor, normalizeColor(framing.borderColor, normalizeColor(config.borderColor)));
+
+  const borderWidth = document.createElement("input");
+  borderWidth.type = "number";
+  borderWidth.name = "borderWidth";
+  borderWidth.min = "0";
+  borderWidth.max = "20";
+  borderWidth.step = "1";
+  setDialogInputValue(borderWidth, normalizeBorderWidth(framing.borderWidth));
+
+  const applyBorderToAll = document.createElement("input");
+  applyBorderToAll.type = "checkbox";
+  applyBorderToAll.name = "applyBorderToAll";
+
+  const borderSection = createDialogSection("Border");
+  const borderSettings = document.createElement("div");
+  borderSettings.className = "pcp-border-settings";
+  borderSettings.append(
+    createDialogField("Border color", borderColor),
+    createDialogField("Border width (px)", borderWidth),
+    createDialogField("Apply border settings to all visible characters", applyBorderToAll)
+  );
+  borderSection.append(borderSettings);
+  dialogBody.append(borderSection);
+
+  const useCustomName = document.createElement("input");
+  useCustomName.type = "checkbox";
+  useCustomName.name = "useCustomName";
+  useCustomName.checked = Boolean(framing.useCustomName);
+  if (useCustomName.checked) useCustomName.setAttribute("checked", "");
+
+  const customName = document.createElement("input");
+  customName.type = "text";
+  customName.name = "customName";
+  customName.maxLength = 100;
+  customName.disabled = !useCustomName.checked;
+  if (customName.disabled) customName.setAttribute("disabled", "");
+  setDialogInputValue(customName, normalizeCustomName(framing.customName) || actor.name);
+
+  const nameFontSize = document.createElement("input");
+  nameFontSize.type = "number";
+  nameFontSize.name = "nameFontSize";
+  nameFontSize.min = "8";
+  nameFontSize.max = "64";
+  nameFontSize.step = "1";
+  setDialogInputValue(nameFontSize, normalizeNameFontSize(framing.nameFontSize, config.size));
+
+  const nameColor = document.createElement("input");
+  nameColor.type = "color";
+  nameColor.name = "nameColor";
+  setDialogInputValue(nameColor, normalizeColor(framing.nameColor, "#ffffff"));
+
+  const nameOffset = document.createElement("input");
+  nameOffset.type = "number";
+  nameOffset.name = "nameOffset";
+  nameOffset.min = "0";
+  nameOffset.max = "100";
+  nameOffset.step = "1";
+  setDialogInputValue(nameOffset, normalizeNameOffset(framing.nameOffset));
+
+  const applyNameStyleToAll = document.createElement("input");
+  applyNameStyleToAll.type = "checkbox";
+  applyNameStyleToAll.name = "applyNameStyleToAll";
+
+  const nameSection = createDialogSection("Name");
+  const nameSettings = document.createElement("div");
+  nameSettings.className = "pcp-name-settings";
+  nameSettings.append(
+    createDialogField("Use custom name", useCustomName),
+    createDialogField("Custom name", customName),
+    createDialogField("Name size (px)", nameFontSize),
+    createDialogField("Name color", nameColor),
+    createDialogField("Offset from bars or bottom (px)", nameOffset),
+    createDialogField("Apply name style to all visible characters", applyNameStyleToAll)
+  );
+  nameSection.append(nameSettings);
+  dialogBody.append(nameSection);
+
+  const markersSection = createDialogSection("Color dots");
+  const markerRows = document.createElement("div");
+  markerRows.className = "pcp-options-rows pcp-marker-rows";
+
+  const createMarkerRow = (marker = {}, index = null) => {
+    const row = document.createElement("div");
+    row.className = "pcp-decoration-row pcp-marker-dialog-row";
+    if (index !== null) row.dataset.index = String(index);
+    const color = document.createElement("input");
+    color.type = "color";
+    color.name = "color";
+    setDialogInputValue(color, normalizeColor(marker.color, "#ffcc00"));
+    const remove = document.createElement("input");
+    remove.type = "checkbox";
+    remove.name = "remove";
+    row.append(createDialogField(index === null ? "Dot" : `Dot ${index + 1}`, color), createDialogField("Remove", remove));
+    return row;
+  };
+
+  for (const [index, marker] of markers.entries()) markerRows.append(createMarkerRow(marker, index));
+  const addMarkerButton = document.createElement("button");
+  addMarkerButton.type = "button";
+  addMarkerButton.className = "pcp-add-marker";
+  addMarkerButton.innerHTML = '<i class="fa-solid fa-plus"></i> Add dot';
+  markersSection.append(markerRows, addMarkerButton);
+  dialogBody.append(markersSection);
+
+  const barsSection = createDialogSection("Resource bars");
   const bottomOffset = document.createElement("input");
   bottomOffset.type = "number";
   bottomOffset.name = "bottomOffset";
@@ -245,7 +292,14 @@ async function manageResourceBars(actorId) {
   const generalSettings = document.createElement("div");
   generalSettings.className = "pcp-resource-general-settings";
   generalSettings.append(createDialogField("Bottom offset (px)", bottomOffset), createDialogField("Depleted opacity (%)", depletedOpacity), createDialogField("Bar spacing (px)", spacing));
-  dialogBody.append(generalSettings);
+  barsSection.append(generalSettings);
+
+  const applyBarsToAll = document.createElement("input");
+  applyBarsToAll.type = "checkbox";
+  applyBarsToAll.name = "applyBarsToAll";
+
+  const barRows = document.createElement("div");
+  barRows.className = "pcp-options-rows pcp-bar-rows";
 
   const createBarRow = (bar = {}, index = null) => {
     const row = document.createElement("div");
@@ -272,15 +326,14 @@ async function manageResourceBars(actorId) {
     return row;
   };
 
-  for (const [index, bar] of bars.entries()) {
-    dialogBody.append(createBarRow(bar, index));
-  }
+  for (const [index, bar] of bars.entries()) barRows.append(createBarRow(bar, index));
 
   const addButton = document.createElement("button");
   addButton.type = "button";
   addButton.className = "pcp-add-resource-bar";
   addButton.innerHTML = '<i class="fa-solid fa-plus"></i> Add another bar';
-  dialogBody.append(addButton);
+  barsSection.append(barRows, addButton, createDialogField("Apply bar settings to all visible characters", applyBarsToAll));
+  dialogBody.append(barsSection);
 
   const readBar = (row, original = {}) => {
     return {
@@ -293,15 +346,26 @@ async function manageResourceBars(actorId) {
   };
 
   const result = await foundry.applications.api.DialogV2.wait({
-    window: { title: `Resource bars — ${actor.name}` },
+    window: { title: `Portrait options — ${actor.name}` },
     content,
     modal: true,
     render: (_event, dialog) => {
       const form = dialog.element.querySelector("form");
-      const button = form?.querySelector(".pcp-add-resource-bar");
-      button?.addEventListener("click", () => {
-        button.before(createBarRow());
+      const markerButton = form?.querySelector(".pcp-add-marker");
+      markerButton?.addEventListener("click", () => {
+        form.querySelector(".pcp-marker-rows")?.append(createMarkerRow());
       });
+      const barButton = form?.querySelector(".pcp-add-resource-bar");
+      barButton?.addEventListener("click", () => {
+        form.querySelector(".pcp-bar-rows")?.append(createBarRow());
+      });
+      const customNameToggle = form?.elements.useCustomName;
+      const customNameInput = form?.elements.customName;
+      const updateCustomNameState = () => {
+        if (customNameInput) customNameInput.disabled = !customNameToggle?.checked;
+      };
+      customNameToggle?.addEventListener("change", updateCustomNameState);
+      updateCustomNameState();
     },
     buttons: [
       {
@@ -310,14 +374,31 @@ async function manageResourceBars(actorId) {
         icon: "fa-solid fa-floppy-disk",
         default: true,
         callback: (_event, button) => {
-          const updated = [...button.form.querySelectorAll(".pcp-decoration-row")]
+          const updatedMarkers = [...button.form.querySelectorAll(".pcp-marker-dialog-row")]
+            .filter(row => !row.querySelector('[name="remove"]')?.checked)
+            .map(row => ({
+              id: markers[Number(row.dataset.index)]?.id || foundry.utils.randomID(),
+              color: normalizeColor(row.querySelector('[name="color"]')?.value, "#ffcc00")
+            }));
+          const updatedBars = [...button.form.querySelectorAll(".pcp-resource-dialog-row")]
             .filter(row => !row.querySelector('[name="remove"]')?.checked)
             .map(row => readBar(row, bars[Number(row.dataset.index)]));
           return {
-            bars: updated.filter(bar => bar.currentPath && bar.maximumPath),
+            markers: updatedMarkers,
+            bars: updatedBars.filter(bar => bar.currentPath && bar.maximumPath),
             bottomOffset: normalizeResourceBarOffset(button.form.elements.bottomOffset?.value),
             depletedOpacity: normalizeResourceBarDepletedOpacity(button.form.elements.depletedOpacity?.value),
-            spacing: normalizeResourceBarSpacing(button.form.elements.spacing?.value)
+            spacing: normalizeResourceBarSpacing(button.form.elements.spacing?.value),
+            borderColor: normalizeColor(button.form.elements.borderColor?.value, normalizeColor(config.borderColor)),
+            borderWidth: normalizeBorderWidth(button.form.elements.borderWidth?.value),
+            nameFontSize: normalizeNameFontSize(button.form.elements.nameFontSize?.value, config.size),
+            nameColor: normalizeColor(button.form.elements.nameColor?.value, "#ffffff"),
+            nameOffset: normalizeNameOffset(button.form.elements.nameOffset?.value),
+            useCustomName: Boolean(button.form.elements.useCustomName?.checked),
+            customName: normalizeCustomName(button.form.elements.customName?.value),
+            applyBorderToAll: Boolean(button.form.elements.applyBorderToAll?.checked),
+            applyNameStyleToAll: Boolean(button.form.elements.applyNameStyleToAll?.checked),
+            applyBarsToAll: Boolean(button.form.elements.applyBarsToAll?.checked)
           };
         }
       },
@@ -325,8 +406,45 @@ async function manageResourceBars(actorId) {
     ]
   });
 
-  if (!result || !Array.isArray(result.bars)) return;
-  await saveActorDecorations(actorId, normalizeMarkers(framing.markers), result.bars, result.bottomOffset, result.depletedOpacity, result.spacing);
+  if (!result || !Array.isArray(result.markers) || !Array.isArray(result.bars)) return;
+  config.actors ??= {};
+  config.actors[actorId] = {
+    ...(config.actors[actorId] || {}),
+    markers: normalizeMarkers(result.markers),
+    resourceBars: normalizeResourceBars(result.bars),
+    resourceBarOffset: result.bottomOffset,
+    resourceBarDepletedOpacity: result.depletedOpacity,
+    resourceBarSpacing: result.spacing,
+    borderColor: result.borderColor,
+    borderWidth: result.borderWidth,
+    nameFontSize: result.nameFontSize,
+    nameColor: result.nameColor,
+    nameOffset: result.nameOffset,
+    useCustomName: result.useCustomName,
+    customName: result.customName
+  };
+
+  for (const visibleActorId of config.order || []) {
+    if (visibleActorId === actorId) continue;
+    const visibleFraming = config.actors[visibleActorId] || {};
+    if (result.applyBorderToAll) {
+      visibleFraming.borderColor = result.borderColor;
+      visibleFraming.borderWidth = result.borderWidth;
+    }
+    if (result.applyNameStyleToAll) {
+      visibleFraming.nameFontSize = result.nameFontSize;
+      visibleFraming.nameColor = result.nameColor;
+      visibleFraming.nameOffset = result.nameOffset;
+    }
+    if (result.applyBarsToAll) {
+      visibleFraming.resourceBars = normalizeResourceBars(foundry.utils.deepClone(result.bars));
+      visibleFraming.resourceBarOffset = result.bottomOffset;
+      visibleFraming.resourceBarDepletedOpacity = result.depletedOpacity;
+      visibleFraming.resourceBarSpacing = result.spacing;
+    }
+    config.actors[visibleActorId] = visibleFraming;
+  }
+  await game.settings.set(MODULE_ID, SETTING_KEY, config);
 }
 
 function removeHud() {
@@ -347,7 +465,6 @@ function renderHud() {
   hud.style.setProperty("--pcp-size", `${clamp(config.size, 48, 160, 86)}px`);
   hud.style.setProperty("--pcp-offset-x", `${clamp(config.offsetX, 0, 1000, 16)}px`);
   hud.style.setProperty("--pcp-offset-y", `${clamp(config.offsetY, 0, 1000, 16)}px`);
-  hud.style.setProperty("--pcp-border-color", normalizeColor(config.borderColor));
 
   for (const actorId of actorIds) {
     const actor = game.actors.get(actorId);
@@ -362,6 +479,12 @@ function renderHud() {
     card.className = "pcp-card";
     card.dataset.actorId = actor.id;
     card.title = actor.name;
+    card.style.setProperty("--pcp-border-color", normalizeColor(framing.borderColor, normalizeColor(config.borderColor)));
+    card.style.setProperty("--pcp-border-width", `${normalizeBorderWidth(framing.borderWidth)}px`);
+    card.style.setProperty("--pcp-name-font-size", `${normalizeNameFontSize(framing.nameFontSize, config.size)}px`);
+    card.style.setProperty("--pcp-name-color", normalizeColor(framing.nameColor, "#ffffff"));
+    card.style.setProperty("--pcp-name-offset", `${normalizeNameOffset(framing.nameOffset)}px`);
+    card.style.setProperty("--pcp-name-base-bottom", "0px");
 
     const portrait = document.createElement("div");
     portrait.className = "pcp-portrait";
@@ -418,7 +541,7 @@ function renderHud() {
       if (barContainer.children.length) {
         card.classList.add("pcp-has-resource-bars");
         const spacingHeight = Math.max(0, barContainer.children.length - 1) * spacing;
-        card.style.setProperty("--pcp-resource-stack-height", `${bottomOffset + renderedBarHeight + spacingHeight + barContainer.children.length * 0.5}px`);
+        card.style.setProperty("--pcp-name-base-bottom", `${bottomOffset + renderedBarHeight + spacingHeight}px`);
         portrait.appendChild(barContainer);
       }
     }
@@ -427,41 +550,27 @@ function renderHud() {
     if (config.showNames !== false) {
       const label = document.createElement("div");
       label.className = "pcp-name";
-      label.textContent = actor.name;
+      const customName = normalizeCustomName(framing.customName);
+      label.textContent = framing.useCustomName && customName ? customName : actor.name;
       card.appendChild(label);
     }
 
     card.addEventListener("click", () => {
       if (actor.isOwner || game.user.isGM) actor.sheet?.render(true);
     });
+    if (game.user.isGM) {
+      card.addEventListener("contextmenu", event => {
+        event.preventDefault();
+        event.stopPropagation();
+        void managePortraitOptions(actor.id);
+      });
+    }
 
     hud.appendChild(card);
   }
 
   if (!hud.children.length) return;
   document.body.appendChild(hud);
-
-  if (game.user.isGM) {
-    const { ContextMenu } = foundry.applications.ux;
-    new ContextMenu(hud, ".pcp-card", [
-      {
-        name: "Manage color dots",
-        icon: '<i class="fa-solid fa-circle"></i>',
-        callback: target => {
-          const element = target?.jquery ? target[0] : target;
-          return manageColorMarkers(element?.dataset.actorId);
-        }
-      },
-      {
-        name: "Manage resource bars",
-        icon: '<i class="fa-solid fa-bars-progress"></i>',
-        callback: target => {
-          const element = target?.jquery ? target[0] : target;
-          return manageResourceBars(element?.dataset.actorId);
-        }
-      }
-    ], { fixed: true });
-  }
 }
 
 async function submitConfiguration(_event, _form, formData) {
@@ -475,22 +584,30 @@ async function submitConfiguration(_event, _form, formData) {
     const row = expanded.actors?.[actor.id] ?? {};
     if (!row.enabled) continue;
 
-    const sortOrder = Math.trunc(clamp(row.sortOrder, -9999, 9999, oldConfig.actors?.[actor.id]?.sortOrder ?? 0));
+    const oldActorConfig = oldConfig.actors?.[actor.id] ?? {};
+    const sortOrder = Math.trunc(clamp(row.sortOrder, -9999, 9999, oldActorConfig.sortOrder ?? 0));
     selectedActors.push({
       id: actor.id,
       sortOrder,
       previousIndex: previousOrderIndex.get(actor.id) ?? previousOrderIndex.size + actorIndex
     });
     actors[actor.id] = {
-      x: clamp(row.x, 0, 100, oldConfig.actors?.[actor.id]?.x ?? 50),
-      y: clamp(row.y, 0, 100, oldConfig.actors?.[actor.id]?.y ?? 50),
-      zoom: clamp(row.zoom, 1, 3, oldConfig.actors?.[actor.id]?.zoom ?? 1),
+      x: clamp(row.x, 0, 100, oldActorConfig.x ?? 50),
+      y: clamp(row.y, 0, 100, oldActorConfig.y ?? 50),
+      zoom: clamp(row.zoom, 1, 3, oldActorConfig.zoom ?? 1),
       sortOrder,
-      markers: normalizeMarkers(oldConfig.actors?.[actor.id]?.markers),
-      resourceBars: normalizeResourceBars(oldConfig.actors?.[actor.id]?.resourceBars),
-      resourceBarOffset: normalizeResourceBarOffset(oldConfig.actors?.[actor.id]?.resourceBarOffset),
-      resourceBarDepletedOpacity: normalizeResourceBarDepletedOpacity(oldConfig.actors?.[actor.id]?.resourceBarDepletedOpacity),
-      resourceBarSpacing: normalizeResourceBarSpacing(oldConfig.actors?.[actor.id]?.resourceBarSpacing)
+      markers: normalizeMarkers(oldActorConfig.markers),
+      resourceBars: normalizeResourceBars(oldActorConfig.resourceBars),
+      resourceBarOffset: normalizeResourceBarOffset(oldActorConfig.resourceBarOffset),
+      resourceBarDepletedOpacity: normalizeResourceBarDepletedOpacity(oldActorConfig.resourceBarDepletedOpacity),
+      resourceBarSpacing: normalizeResourceBarSpacing(oldActorConfig.resourceBarSpacing),
+      borderColor: normalizeColor(oldActorConfig.borderColor, normalizeColor(oldConfig.borderColor)),
+      borderWidth: normalizeBorderWidth(oldActorConfig.borderWidth),
+      nameFontSize: normalizeNameFontSize(oldActorConfig.nameFontSize, oldConfig.size),
+      nameColor: normalizeColor(oldActorConfig.nameColor, "#ffffff"),
+      nameOffset: normalizeNameOffset(oldActorConfig.nameOffset),
+      useCustomName: Boolean(oldActorConfig.useCustomName),
+      customName: normalizeCustomName(oldActorConfig.customName)
     };
   }
 
@@ -503,7 +620,6 @@ async function submitConfiguration(_event, _form, formData) {
     offsetX: clamp(expanded.offsetX, 0, 1000, DEFAULT_CONFIG.offsetX),
     offsetY: clamp(expanded.offsetY, 0, 1000, DEFAULT_CONFIG.offsetY),
     showNames: Boolean(expanded.showNames),
-    borderColor: normalizeColor(expanded.borderColor),
     order: selectedActors.map(actor => actor.id),
     actors
   };
@@ -557,7 +673,9 @@ class PartyCornerPortraitsConfig extends HandlebarsApplicationMixin(ApplicationV
           sortOrder: Math.trunc(clamp(framing.sortOrder, -9999, 9999, 0)),
           x: clamp(framing.x, 0, 100, 50),
           y: clamp(framing.y, 0, 100, 50),
-          zoom: clamp(framing.zoom, 1, 3, 1)
+          zoom: clamp(framing.zoom, 1, 3, 1),
+          borderColor: normalizeColor(framing.borderColor, normalizeColor(config.borderColor)),
+          borderWidth: normalizeBorderWidth(framing.borderWidth)
         };
       })
       .sort((a, b) => {
@@ -610,18 +728,6 @@ class PartyCornerPortraitsConfig extends HandlebarsApplicationMixin(ApplicationV
             ? `${Number(currentInput.value).toFixed(2)}×`
             : `${currentInput.value}%`;
         }
-      });
-    }
-
-    const borderColorInput = this.element.querySelector('input[name="borderColor"]');
-    if (borderColorInput) {
-      const applyBorderPreview = value => {
-        this.element.style.setProperty("--pcp-border-color", normalizeColor(value));
-      };
-
-      applyBorderPreview(borderColorInput.value);
-      borderColorInput.addEventListener("input", event => {
-        applyBorderPreview(event.currentTarget.value);
       });
     }
 
