@@ -9,7 +9,7 @@ Party Corner Portraits displays your party’s character portraits in a corner o
 | Module version | Foundry VTT |
 | --- | --- |
 | 1.3.0 | 11 |
-| 2.2.0 | 13 |
+| 2.3.0 | 13 |
 | 3.1.0 | 14 |
 
 ## Installation

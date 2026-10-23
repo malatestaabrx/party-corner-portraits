@@ -10,6 +10,8 @@ Features
 - Supports all four screen corners.
 - Supports horizontal and vertical layouts.
 - Provides a configurable border color for every portrait.
+- Supports multiple GM-managed colored markers per portrait.
+- Supports multiple resource bars linked to numeric character-sheet fields.
 - Clicking a portrait opens its sheet when the user has permission to view that Actor.
 
 Manual installation
@@ -31,6 +33,10 @@ Compatibility
 -------------
 Designed for Foundry VTT 13.
 The configuration window uses ApplicationV2 and HandlebarsApplicationMixin.
+
+Version 2.3.0
+- Added GM-managed colored markers to character portraits.
+- Added multiple resource bars linked to numeric character-sheet fields.
 
 Version 2.2.0
 - Added a numeric order field to each character.

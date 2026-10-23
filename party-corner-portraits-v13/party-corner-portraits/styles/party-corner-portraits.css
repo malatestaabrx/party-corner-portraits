@@ -63,6 +63,54 @@
   background: #111;
 }
 
+#pcp-party-hud .pcp-color-markers {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  z-index: 3;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 3px;
+  max-width: calc(100% - 8px);
+  pointer-events: none;
+}
+
+#pcp-party-hud .pcp-color-marker {
+  width: 9px;
+  height: 9px;
+  border: 1px solid #000;
+  border-radius: 50%;
+  background: var(--pcp-marker-color);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+}
+
+#pcp-party-hud .pcp-resource-bars {
+  position: absolute;
+  right: 0;
+  bottom: 1px;
+  left: 0;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  pointer-events: none;
+}
+
+#pcp-party-hud .pcp-resource-bar {
+  height: 4px;
+  overflow: hidden;
+  border: 0;
+  border-radius: 0;
+  background: color-mix(in srgb, var(--pcp-resource-color) 30%, transparent);
+}
+
+#pcp-party-hud .pcp-resource-bar > span {
+  display: block;
+  height: 100%;
+  background: var(--pcp-resource-color);
+}
+
 #pcp-party-hud .pcp-portrait img,
 .pcp-config-preview img {
   width: 100%;
@@ -92,7 +140,53 @@
   background: linear-gradient(transparent, rgba(0, 0, 0, 0.92));
 }
 
+#pcp-party-hud .pcp-card.pcp-has-resource-bars .pcp-name {
+  bottom: var(--pcp-resource-stack-height);
+}
+
 /* Configuration */
+.pcp-decoration-dialog {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 440px;
+}
+
+.pcp-decoration-row,
+.pcp-decoration-add {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 12px;
+  padding: 8px;
+  border: 1px solid rgba(128, 128, 128, 0.35);
+  border-radius: 5px;
+}
+
+.pcp-decoration-add {
+  border-style: dashed;
+}
+
+.pcp-resource-dialog-row {
+  grid-template-columns: minmax(180px, 2fr) minmax(180px, 2fr) minmax(72px, 0.7fr) minmax(72px, 0.7fr);
+}
+
+.pcp-add-resource-bar {
+  align-self: flex-start;
+  width: auto;
+}
+
+.pcp-decoration-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  font-size: 12px;
+}
+
+.pcp-decoration-field input[type="checkbox"] {
+  align-self: flex-start;
+}
+
 .party-corner-portraits-form {
   padding: 10px;
 }
